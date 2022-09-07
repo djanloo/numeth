@@ -9,6 +9,9 @@ __pycache__/
 # C files
 *.c
 
+# HTML
+*.html
+
 # Distribution / packaging
 .Python
 build/
