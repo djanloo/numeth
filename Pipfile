@@ -8,6 +8,7 @@ cython = "*"
 rich = "*"
 line-profiler = "*"
 numpy = "*"
+matplotlib = "*"
 
 [dev-packages]
 

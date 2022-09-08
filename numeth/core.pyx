@@ -1,7 +1,7 @@
 """Module for core calculations"""
 cimport cython
 from cython.parallel import prange
-from libc.math cimport sqrt
+from libc.math cimport sqrt, log
 from libc.stdlib cimport rand
 
 cdef extern from "limits.h":
@@ -26,9 +26,9 @@ cpdef harmosc(float [:] x, float eps, int refresh):
   cdef float proposal = 0.0
   for i in range(refresh):
     with nogil:
-      for k in prange(1, N):
+      for k in prange(1, N-1):
         proposal = x[k] + eps*randelta()
-        if log_prob(x[k-1], x[k]) < randzerone():
+        if log_prob(x[k-1], x[k]) > log(randzerone()):
           x[k] = proposal
   return x
   
