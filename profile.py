@@ -10,10 +10,11 @@ import numpy as np
 # Without this line line_profiler won't find anything
 chdir(join(dirname(__file__), "numeth"))
 
-arg = (np.zeros(10000, dtype=np.float32),)
+arg = (np.zeros(200, dtype=np.float32), 1.0, 1000)
+
 
 # Comparison between functions that accept the same args
-funcs = [core.harmosc,]
+funcs = [core.harmosc, core.dummy_last_2]
 
 lp = LineProfiler()
 
@@ -21,5 +22,7 @@ for f in funcs:
     lp.add_function(f)
     wrap = lp(f)
     wrap(*arg)
+
+
 
 lp.print_stats()

@@ -33,6 +33,7 @@ cython_compiler_directives = {'language_level': "3"}
 if args.profile:
     print("[blue]Compiling in [green]PROFILE[/green] mode[/blue]")
     directive_defaults = get_directive_defaults()
+    directive_defaults['profile'] = True
     directive_defaults['linetrace'] = True
     directive_defaults['binding'] = True
     # Activates profiling
