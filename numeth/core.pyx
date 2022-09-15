@@ -4,20 +4,6 @@ from libc.math cimport sqrt, log
 from libc.stdlib cimport rand
 
 # cimport cython
-
-cpdef harmosc(float [:] x, float eps, int refresh):
-  """Commento a caso"""
-  cdef int N = len(x)
-  cdef int k = 0
-  cdef float proposal = 0.0
-  for i in range(refresh):
-    with nogil:
-      for k in prange(1, N-1):
-        proposal = x[k] + eps*randelta()
-        if log_prob(x[k-1], x[k]) > log(randzerone()):
-          x[k] = proposal
-  return x
-
 cdef extern from "limits.h":
     int INT_MAX
 
@@ -27,9 +13,22 @@ cdef float randelta() nogil:
 cdef float randzerone() nogil:
   return rand()/ float(INT_MAX)
 
-cdef float log_prob(float x_previous, float x_current) nogil:
-  cdef float deltax = x_current - x_previous
-  return -(x_current*x_current + deltax*deltax) 
+cpdef harmosc(float [:] x, float eps, int refresh, float eta=0.1):
+  """Commento a caso"""
+  cdef int N = len(x)
+  cdef int k = 0
+  cdef float proposal = 0.0, log_r = 0.0
+  for i in range(refresh):
+    with nogil:
+      # Note that range(N) sweeps the interval [0, ..., N-1]
+      # ciclicity is imposed using %N
+      # x*x is used instead of x**2 for speed
+      for k in prange(N):
+        proposal = x[k] + eps*randelta()
+        log_r = -(proposal*proposal - x[k]*x[k])*(1.0/eta + eta/2.0) + 1.0/eta * (proposal - x[k])*(x[(k+1)%N] + x[(k-1)%N])
+        if log_r > log(randzerone()):
+          x[k] = proposal
+  return x
 
 cpdef dummy_last(float [:] x, float eps, int refresh):
   return 0.0
