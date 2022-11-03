@@ -23,7 +23,7 @@ cdef int[: ,:] _ising_random_init(int [:, :] S):
             S[i,j] = 2*(rand()%2) -1
     return S
 
-cpdef int mod(int a, int b):
+cdef int mod(int a, int b):
     """modulo function
     
     Since the % operatio can give negative numbers, this brings an integer `a` in the
@@ -57,5 +57,10 @@ def ising(int N=100, float beta=0.1, float J=0.1,  float h=0.1, int N_iter=100, 
                     S[i,j] = proposal
     return S
 
-cdef does_nothing():
-  pass
+def this_is_wrong():
+    cdef int [:] s = np.ones(4,dtype=np.dtype("i"))
+    cdef int i
+    i = 0-1
+    s[i] = 0
+    s[4] = 0
+    return s

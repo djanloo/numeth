@@ -11,14 +11,11 @@ import numpy as np
 # Without this line line_profiler won't find anything
 chdir(join(dirname(__file__), "numeth"))
 
-# lp.add_function(f)
-#     wrap = lp(f)
-#     wrap(*arg)
 
-profile = LineProfiler()
-profile.add_function(ising.ising)
-profile.add_function(ising.mod)
-wrap = profile(ising.ising)
-wrap(50, 5, 0.1, 0.0, 50)
-profile.print_stats()
+# profile = LineProfiler()
+# profile.add_function(ising.ising)
+# wrap = profile(ising.ising)
+# wrap(100, 5, 0.1, 0.0, 100)
+# profile.print_stats()
+print(list(ising.this_is_wrong()))
 

@@ -27,39 +27,38 @@ extension_kwargs = dict(
         extra_link_args=["-fopenmp"],
         )
 
-cython_compiler_directives = {'language_level': "3"}
+cython_compiler_directives = get_directive_defaults()
+cython_compiler_directives['language_level'] = "3"
+cython_compiler_directives['warn'] = True
 
 # Profiling using line_profiler
 if args.profile:
     print("[blue]Compiling in [green]PROFILE[/green] mode[/blue]")
-    directive_defaults = get_directive_defaults()
-    directive_defaults['profile'] = True
-    directive_defaults['linetrace'] = True
-    directive_defaults['binding'] = True
+    cython_compiler_directives['profile'] = True
+    cython_compiler_directives['linetrace'] = True
+    cython_compiler_directives['binding'] = True
     # Activates profiling
     extension_kwargs["define_macros"] = [('CYTHON_TRACE', '1'), ('CYTHON_TRACE_NOGIL', '1')]
 
 # Explicitly turns off tracing
 # Use ony in case you see DCYTHON_TRACE=1 during compilation
 elif args.notrace:
-    directive_defaults = get_directive_defaults()
-    directive_defaults['linetrace'] = False
-    directive_defaults['binding'] = False
+    cython_compiler_directives['linetrace'] = False
+    cython_compiler_directives['binding'] = False
+    # Forcefully turns off tracing
     extension_kwargs["define_macros"] = [('CYTHON_TRACE', '0'), ('CYTHON_TRACE_NOGIL', '0')]
 
 # Globally boost speed by disabling checks
 # see https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#compiler-directives
 elif args.hardcore:
     print("[blue]Compiling in [green]HARDCORE[/green] mode[/blue]")
-    cython_compiler_directives = {
-                                "boundscheck":False,
-                                "cdivision":True,
-                                "wraparound":False
-                                }
+    cython_compiler_directives['boundscheck'] = False
+    cython_compiler_directives['cdivision'] = True
+    cython_compiler_directives['wraparound'] = False
 
 # Finds each .pyx file and adds it as an extension
 cython_files = [file for file in os.listdir(".") if file.endswith(".pyx")]
-print(f"{len(cython_files)} cython files found ({cython_files})")
+print(f"Found {len(cython_files)} cython files ({cython_files})")
 ext_modules = [
     Extension(
         cfile.strip(".pyx"),
@@ -69,8 +68,8 @@ ext_modules = [
     for cfile in cython_files
 ]
 # Sets language level
-cython_compiler_directives['language_level'] = "3"
-
+print(f"[blue]COMPILER DIRECTIVES[/blue]: {cython_compiler_directives}")
+print(f"[blue]EXT_KWARGS[/blue]: {extension_kwargs}")
 setup(
     name=packageDir,
     cmdclass={"build_ext": build_ext},
