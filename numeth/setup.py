@@ -68,6 +68,8 @@ ext_modules = [
     )
     for cfile in cython_files
 ]
+# Sets language level
+cython_compiler_directives['language_level'] = "3"
 
 setup(
     name=packageDir,

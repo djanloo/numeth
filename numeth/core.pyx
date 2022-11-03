@@ -1,3 +1,4 @@
+# cython: boundscheck=False
 """Module for core calculations"""
 from cython.parallel import prange
 from libc.math cimport sqrt, log
