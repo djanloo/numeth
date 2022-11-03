@@ -32,7 +32,7 @@ cdef int mod(int a, int b):
     cdef int r = a % b
     return r if r >= 0 else r + b
 
-def ising(int N=100, float beta=0.1, float J=0.1,  float h=0.1, int N_iter=100, init="random"):
+cpdef ising(int N=100, float beta=0.1, float J=0.1,  float h=0.1, int N_iter=100, init="random"):
     # Creates the matrix
     cdef int [:, :] S = np.ones((N,N),dtype=np.dtype("i"))
     print(f"N {N}\tNiter {N_iter}\tbeta {beta}\th {h}\tJ {J}")
