@@ -30,7 +30,7 @@ cpdef harmosc(float [:] x, float eps, int refresh, float eta=0.1):
         if log_r > log(randzerone()):
           x[k] = proposal
   return x
-
+# prova
 cpdef dummy_last(float [:] x, float eps, int refresh):
   return 0.0
 
