@@ -3,6 +3,7 @@ from cython.parallel import prange
 from libc.math cimport sqrt, log
 from libc.stdlib cimport rand
 import numpy as np
+cimport cython
 
 cdef extern from "limits.h":
     int INT_MAX
@@ -23,10 +24,15 @@ cdef int[: ,:] _ising_random_init(int [:, :] S):
     return S
 
 cdef int mod(int a, int b):
+    """modulo function
+    
+    Since the % operatio can give negative numbers, this brings an integer `a` in the
+    interval [0, `b` - 1].
+    """
     cdef int r = a % b
-    return r if r > 0 else r + b
+    return r if r >= 0 else r + b
 
-cpdef ising(int N=100, float beta=0.1, float J=0.1,  float h=0.1, int N_iter=100, init="random"):
+def ising(int N=100, float beta=0.1, float J=0.1,  float h=0.1, int N_iter=100, init="random"):
     # Creates the matrix
     cdef int [:, :] S = np.ones((N,N),dtype=np.dtype("i"))
     print(f"N {N}\tNiter {N_iter}\tbeta {beta}\th {h}\tJ {J}")
@@ -49,3 +55,6 @@ cpdef ising(int N=100, float beta=0.1, float J=0.1,  float h=0.1, int N_iter=100
                 if log_r > log(u):
                     S[i,j] = proposal
     return S
+
+cdef does_nothing():
+  pass
