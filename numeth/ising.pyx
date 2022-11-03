@@ -23,7 +23,7 @@ cdef int[: ,:] _ising_random_init(int [:, :] S):
             S[i,j] = 2*(rand()%2) -1
     return S
 
-cdef int mod(int a, int b):
+cpdef int mod(int a, int b):
     """modulo function
     
     Since the % operatio can give negative numbers, this brings an integer `a` in the
@@ -32,8 +32,6 @@ cdef int mod(int a, int b):
     cdef int r = a % b
     return r if r >= 0 else r + b
 
-def dummy():
-    pass
 
 def ising(int N=100, float beta=0.1, float J=0.1,  float h=0.1, int N_iter=100, init="random"):
     # Creates the matrix

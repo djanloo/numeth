@@ -15,10 +15,9 @@ chdir(join(dirname(__file__), "numeth"))
 #     wrap = lp(f)
 #     wrap(*arg)
 
-
 profile = LineProfiler()
-profile.add_function(ising.dummy)
 profile.add_function(ising.ising)
+profile.add_function(ising.mod)
 wrap = profile(ising.ising)
 wrap(50, 5, 0.1, 0.0, 50)
 profile.print_stats()
