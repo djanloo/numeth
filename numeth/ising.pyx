@@ -26,21 +26,31 @@ cdef int[: ,:] _ising_random_init(int [:, :] S):
 cdef int mod(int a, int b):
     """modulo function
     
-    Since the % operatio can give negative numbers, this brings an integer `a` in the
+    Since the % operation can give negative numbers, this brings an integer `a` in the
     interval [0, `b` - 1].
     """
     cdef int r = a % b
     return r if r >= 0 else r + b
 
 
-def ising(int N=100, float beta=0.1, float J=0.1,  float h=0.1, int N_iter=100, init="random"):
+def ising(  int N=100, 
+            float beta=0.1, 
+            float J=0.1,  
+            float h=0.1, 
+            int N_iter=100,
+            startfrom=None,
+            init="random"):
     # Creates the matrix
     cdef int [:, :] S = np.ones((N,N),dtype=np.dtype("i"))
     print(f"N {N}\tNiter {N_iter}\tbeta {beta}\th {h}\tJ {J}")
-    if init == "random":
+
+    if startfrom is not None:
+        print("starting from given config..")
+        S = startfrom
+    elif init == "random":
         S = _ising_random_init(S)
 
-    cdef int proposal, neighborhood, i, j, iter_index
+    cdef int proposal, neighborhood, i, j, iter_index, accepted = 0
     cdef float log_r
 
     for iter_index in range(N_iter):
@@ -54,5 +64,7 @@ def ising(int N=100, float beta=0.1, float J=0.1,  float h=0.1, int N_iter=100, 
                 if u == 0.0:
                     print("null probability")
                 if log_r > log(u):
+                    accepted += 1 
                     S[i,j] = proposal
+    print(f"Accepted proposals: {accepted}")
     return S
