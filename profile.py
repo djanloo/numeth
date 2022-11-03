@@ -12,10 +12,9 @@ import numpy as np
 chdir(join(dirname(__file__), "numeth"))
 
 
-# profile = LineProfiler()
-# profile.add_function(ising.ising)
-# wrap = profile(ising.ising)
-# wrap(100, 5, 0.1, 0.0, 100)
-# profile.print_stats()
-print(list(ising.this_is_wrong()))
+profile = LineProfiler()
+profile.add_function(ising.ising)
+wrap = profile(ising.ising)
+wrap(100, 5, 0.1, 0.0, 100)
+profile.print_stats()
 

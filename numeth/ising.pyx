@@ -56,11 +56,3 @@ def ising(int N=100, float beta=0.1, float J=0.1,  float h=0.1, int N_iter=100, 
                 if log_r > log(u):
                     S[i,j] = proposal
     return S
-
-def this_is_wrong():
-    cdef int [:] s = np.ones(4,dtype=np.dtype("i"))
-    cdef int i
-    i = 0-1
-    s[i] = 0
-    s[4] = 0
-    return s

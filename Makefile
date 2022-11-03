@@ -16,6 +16,10 @@ hardcore:
 	make clear
 	@python -m numeth.setup --hardcore
 
+hardcoreprofile:
+	make clear
+	@python -m numeth.setup --hardcore --profile
+
 clear:
 	@echo "Cleaning all.."
 	@rm -f numeth/*.c

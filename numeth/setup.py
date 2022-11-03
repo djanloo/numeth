@@ -42,7 +42,7 @@ if args.profile:
 
 # Explicitly turns off tracing
 # Use ony in case you see DCYTHON_TRACE=1 during compilation
-elif args.notrace:
+if args.notrace:
     cython_compiler_directives['linetrace'] = False
     cython_compiler_directives['binding'] = False
     # Forcefully turns off tracing
@@ -50,7 +50,7 @@ elif args.notrace:
 
 # Globally boost speed by disabling checks
 # see https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#compiler-directives
-elif args.hardcore:
+if args.hardcore:
     print("[blue]Compiling in [green]HARDCORE[/green] mode[/blue]")
     cython_compiler_directives['boundscheck'] = False
     cython_compiler_directives['cdivision'] = True
