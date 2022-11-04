@@ -48,10 +48,8 @@ def ising(  unsigned int N=100,
     
     # Creates the matrix
     cdef int [:, :] S = np.ones((N,N),dtype=np.dtype("i"))
-    # print(f"N {N}\tNiter {N_iter}\tbeta {beta}\th {h}\tJ {J}")
 
     if startfrom is not None:
-        # print("starting from given config..")
         S = startfrom
     elif init == "random":
         S = _ising_random_init(S)
