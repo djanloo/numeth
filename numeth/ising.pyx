@@ -1,7 +1,7 @@
 """Module for the ising part"""
 from cython.parallel import prange
 from libc.math cimport sqrt, log
-from libc.stdlib cimport rand
+from libc.stdlib cimport rand, srand
 import numpy as np
 cimport cython
 
@@ -32,6 +32,11 @@ cdef int mod(int a, int b):
     cdef int r = a % b
     return r if r >= 0 else r + b
 
+cpdef set_seed(seed):
+    # Sets the time as seed
+    print(f"seed set to {seed}")
+    srand(seed)
+
 
 def ising(  int N=100, 
             float beta=0.1, 
@@ -40,18 +45,19 @@ def ising(  int N=100,
             int N_iter=100,
             startfrom=None,
             init="random"):
+    
     # Creates the matrix
     cdef int [:, :] S = np.ones((N,N),dtype=np.dtype("i"))
-    print(f"N {N}\tNiter {N_iter}\tbeta {beta}\th {h}\tJ {J}")
+    # print(f"N {N}\tNiter {N_iter}\tbeta {beta}\th {h}\tJ {J}")
 
     if startfrom is not None:
-        print("starting from given config..")
+        # print("starting from given config..")
         S = startfrom
     elif init == "random":
         S = _ising_random_init(S)
 
     cdef int proposal, neighborhood, i, j, iter_index, accepted = 0
-    cdef float log_r
+    cdef float log_r, u
 
     for iter_index in range(N_iter):
         for i in range(N):
@@ -61,10 +67,8 @@ def ising(  int N=100,
                 log_r = ( beta*J*neighborhood*(proposal - S[i,j]) # Interaction term
                           + beta*h*(proposal - S[i,j]))           # Field term
                 u = randzerone()
-                if u == 0.0:
-                    print("null probability")
                 if log_r > log(u):
                     accepted += 1 
                     S[i,j] = proposal
-    print(f"Accepted proposals: {accepted}")
+    # print(f"Accepted proposals: {accepted}")
     return S
