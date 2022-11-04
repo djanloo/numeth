@@ -12,22 +12,28 @@ set_seed( int((t- int(t))*10000) )
 def beta(i):
     return 2*np.exp(i/100)
 
-npoints = 40
-n_means = 300
+npoints = 20
+n_means = 30
 
-S = ising(N=100, beta=500, J=1.0, h=0.0, N_iter=100)
 m = np.zeros(npoints)
-T = np.linspace(2.0, 2.7, npoints)[::-1]
+sigmas = np.zeros(npoints)
+T = np.linspace(0.01, 4.0, npoints)[::-1]
 
 for i, t in track(enumerate(T), total=npoints):
-    for _ in range(n_means):
-        ising(N=100, beta=1/t, J=1.0, h=0.0005, N_iter=70, startfrom=S)
-        m[i] += np.mean(S)
-    m[i] /= n_means
-    send(messages=[f"{i/npoints*100:.1f}"])
+    mm = np.zeros(n_means)
+    S = ising(N=100, beta=1/t, J=1.0, h=0.007, N_iter=512 )
 
+    for sample in range(n_means):
+        mm[sample] = np.mean(S)
+        ising(N=100, beta=1/t, J=1.0, h=0.007, N_iter=128, startfrom=S)
+    print(f"t = {t}: mm = {mm}")
+    m[i] = np.mean(mm)
+    sigmas[i] = np.std(mm)
 
-plt.plot(T, m)
+    # send(messages=[f"{i/npoints*100:.1f}"])
+
+plt.figure(100)
+plt.errorbar(T, m, sigmas,  ls="", marker=".")
 plt.ylabel("$\psi$")
 plt.xlabel("T")
 

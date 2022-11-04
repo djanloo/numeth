@@ -40,8 +40,8 @@ cpdef void set_seed(seed):
 
 def ising(  unsigned int N=100, 
             float beta=0.1, 
-            float J=0.1,  
-            float h=0.1, 
+            float J=1.0,  
+            float h=1.0, 
             unsigned int N_iter=100,
             startfrom=None,
             init="random"):
