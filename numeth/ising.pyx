@@ -23,7 +23,7 @@ cdef int[: ,:] _ising_random_init(int [:, :] S):
             S[i,j] = 2*(rand()%2) -1
     return S
 
-cdef int mod(int a, int b):
+cdef unsigned int mod(int a, int b):
     """modulo function
     
     Since the % operation can give negative numbers, this brings an integer `a` in the
@@ -32,17 +32,17 @@ cdef int mod(int a, int b):
     cdef int r = a % b
     return r if r >= 0 else r + b
 
-cpdef set_seed(seed):
+cpdef void set_seed(seed):
     # Sets the time as seed
-    print(f"seed set to {seed}")
     srand(seed)
+    return
 
 
-def ising(  int N=100, 
+def ising(  unsigned int N=100, 
             float beta=0.1, 
             float J=0.1,  
             float h=0.1, 
-            int N_iter=100,
+            unsigned int N_iter=100,
             startfrom=None,
             init="random"):
     
@@ -56,16 +56,21 @@ def ising(  int N=100,
     elif init == "random":
         S = _ising_random_init(S)
 
-    cdef int proposal, neighborhood, i, j, iter_index, accepted = 0
+    cdef int proposal, neighborhood, accepted = 0
+    cdef unsigned int i, j, iter_index
     cdef float log_r, u
 
     for iter_index in range(N_iter):
         for i in range(N):
             for j in range(N):
                 proposal = 2*(rand()%2) - 1
-                neighborhood = S[i, mod(j+1, N)] + S[mod(i+1, N), j] + S[i, mod(j-1, N)] + S[mod(i-1, N), j]
-                log_r = ( beta*J*neighborhood*(proposal - S[i,j]) # Interaction term
-                          + beta*h*(proposal - S[i,j]))           # Field term
+                neighborhood = (
+                                S[i, mod(j+1, N)] +
+                                S[mod(i+1, N), j] +
+                                S[i, mod(j-1, N)] +
+                                S[mod(i-1, N), j]
+                                )
+                log_r = beta*(J*neighborhood + h)*(proposal - S[i,j]) 
                 u = randzerone()
                 if log_r > log(u):
                     accepted += 1 
