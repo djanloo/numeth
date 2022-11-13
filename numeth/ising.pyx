@@ -83,7 +83,7 @@ cpdef energy(int [:,:] S, float J, float h):
     for i in range(N): 
         for j in range(N):
             neighborhood = (S[i, mod(j+1, N)] +S[mod(i+1, N), j] +S[i, mod(j-1, N)] +S[mod(i-1, N), j])
-            H_neigh = ((J/4)*(neighborhood)+h)*S[i,j]
+            H_neigh = -((J/4)*(neighborhood)+h)*S[i,j]
             H=H+H_neigh
     return H
 
