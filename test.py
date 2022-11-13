@@ -14,13 +14,20 @@ from matplotlib.animation import FuncAnimation
 from time import time
 from rich.progress import track
 
+def autocorr(y):
+    x = y.copy()
+    x -= np.mean(x)
+    x /= np.std(x)
+    result = np.correlate(x, x, mode='full')/len(x)
+    return result[result.size//2:]
+
 # Imposta il seed usando il tempo
 t = time()
 set_seed( int((t- int(t))*10000) )
 
-N_celle = 16
+N_celle = 32
 n_temperature = 30
-n_samples = 50
+n_samples = 10000
 
 psi = np.zeros((n_temperature, n_samples))
 H = np.zeros((n_temperature, n_samples))
@@ -30,21 +37,36 @@ sigma_psi = np.zeros(n_temperature)
 mean_H = np.zeros(n_temperature)
 sigma_H = np.zeros(n_temperature)
 
-T = np.linspace(1.5, 3.0, n_temperature)
+T = np.linspace(-1.0, 1.0, n_temperature)
+T = 2.3*(T**3 + 1) + 1e-3
 
 for i, t in track(enumerate(T), total=n_temperature):
-   
     # Field limit + thermalization
-    S = ising(N=N_celle, beta=1/t, J=1.031, h=0.1, N_iter=128)
-    for h in [0.003, 0.002, 0.001, 0.0, 0.0, 0.0]:
-        S = ising(N=N_celle, beta=1/t, J=1.0, h=h, N_iter=100, startfrom=S)
+    S = ising(N=N_celle, beta=1/t, J=1.031, h=0.0, N_iter=100)
+    # for h in [0.003, 0.002, 0.001, 0.0, 0.0, 0.0]:
+    #     S = ising(N=N_celle, beta=1/t, J=1.0, h=h, N_iter=1, startfrom=S)
 
     for sample in range(n_samples):
-        psi[i, sample] = np.mean(S)
+        psi[i, sample] = np.abs(np.mean(S))
         H[i, sample] = energy(S,1.0,0.0)
-        ising(N=N_celle, beta=1/t, J=1.0, h=0.0 , N_iter=1024, startfrom=S)
+        ising(N=N_celle, beta=1/t, J=1.0, h=0.0 , N_iter=50, startfrom=S)
 
-mean_psi = np.mean(psi, axis=1)
+np.save("psi.npy", psi)
+np.save("H.npy", H)
+
+# for i,t in enumerate(T):
+#     plt.plot(autocorr(psi[i, 50:]), label=f"T={t}")
+# plt.legend(fontsize=8)
+
+# plt.figure(2)
+# for i,t in enumerate(T):
+#     plt.plot(autocorr(H[i, 50:]), label=f"T={t}")
+# plt.legend(fontsize=8)
+
+# plt.show()
+
+
+mean_psi = np.abs(np.mean(psi, axis=1))
 sigma_psi = np.std(psi, axis=1)
 mean_H = np.mean(H, axis=1)
 sigma_H = np.std(H, axis=1)
