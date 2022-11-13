@@ -12,6 +12,12 @@ __pycache__/
 # HTML
 *.html
 
+# Images and videos
+*.png 
+*.mp4
+*.gif
+
+
 # Distribution / packaging
 .Python
 build/
