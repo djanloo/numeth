@@ -37,7 +37,6 @@ cpdef void set_seed(seed):
     srand(seed)
     return
 
-
 def ising(  unsigned int N=100, 
             float beta=0.1, 
             float J=1.0,  
@@ -75,3 +74,16 @@ def ising(  unsigned int N=100,
                     S[i,j] = proposal
     # print(f"Accepted proposals: {accepted}")
     return S
+
+cpdef energy(int [:,:] S, float J, float h):
+    cdef float H=0
+    cdef float H_neigh
+    cdef int N = len(S)
+    cdef int i,j
+    for i in range(N): 
+        for j in range(N):
+            neighborhood = (S[i, mod(j+1, N)] +S[mod(i+1, N), j] +S[i, mod(j-1, N)] +S[mod(i-1, N), j])
+            H_neigh = ((J/4)*(neighborhood)+h)*S[i,j]
+            H=H+H_neigh
+    return H
+

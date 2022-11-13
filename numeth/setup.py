@@ -67,6 +67,9 @@ ext_modules = [
     )
     for cfile in cython_files
 ]
+
+ext_modules.append(Extension("gigarand", ["gigarand/gigarand.c"]))
+
 # Sets language level
 print(f"[blue]COMPILER DIRECTIVES[/blue]: {cython_compiler_directives}")
 print(f"[blue]EXT_KWARGS[/blue]: {extension_kwargs}")
