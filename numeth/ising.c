@@ -11,7 +11,7 @@
             "-fopenmp"
         ],
         "include_dirs": [
-            "/home/djanloo/Desktop/numeth/numeth"
+            "/home/alepi/numeth/numeth"
         ],
         "libraries": [
             "m"
@@ -3299,7 +3299,7 @@ static PyObject *__pyx_f_5ising_energy(__Pyx_memviewslice __pyx_v_S, float __pyx
  *     for i in range(N):
  *         for j in range(N):             # <<<<<<<<<<<<<<
  *             neighborhood = (S[i, mod(j+1, N)] +S[mod(i+1, N), j] +S[i, mod(j-1, N)] +S[mod(i-1, N), j])
- *             H_neigh = ((J/4)*(neighborhood)+h)*S[i,j]
+ *             H_neigh = -((J/4)*(neighborhood)+h)*S[i,j]
  */
     __pyx_t_5 = __pyx_v_N;
     __pyx_t_6 = __pyx_t_5;
@@ -3310,7 +3310,7 @@ static PyObject *__pyx_f_5ising_energy(__Pyx_memviewslice __pyx_v_S, float __pyx
  *     for i in range(N):
  *         for j in range(N):
  *             neighborhood = (S[i, mod(j+1, N)] +S[mod(i+1, N), j] +S[i, mod(j-1, N)] +S[mod(i-1, N), j])             # <<<<<<<<<<<<<<
- *             H_neigh = ((J/4)*(neighborhood)+h)*S[i,j]
+ *             H_neigh = -((J/4)*(neighborhood)+h)*S[i,j]
  *             H=H+H_neigh
  */
       __pyx_t_8 = __pyx_v_i;
@@ -3369,7 +3369,7 @@ static PyObject *__pyx_f_5ising_energy(__Pyx_memviewslice __pyx_v_S, float __pyx
       /* "ising.pyx":86
  *         for j in range(N):
  *             neighborhood = (S[i, mod(j+1, N)] +S[mod(i+1, N), j] +S[i, mod(j-1, N)] +S[mod(i-1, N), j])
- *             H_neigh = ((J/4)*(neighborhood)+h)*S[i,j]             # <<<<<<<<<<<<<<
+ *             H_neigh = -((J/4)*(neighborhood)+h)*S[i,j]             # <<<<<<<<<<<<<<
  *             H=H+H_neigh
  *     return H
  */
@@ -3384,6 +3384,9 @@ static PyObject *__pyx_f_5ising_energy(__Pyx_memviewslice __pyx_v_S, float __pyx
       __Pyx_GOTREF(__pyx_t_18);
       __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
       __Pyx_DECREF(__pyx_t_16); __pyx_t_16 = 0;
+      __pyx_t_16 = PyNumber_Negative(__pyx_t_18); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 86, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_16);
+      __Pyx_DECREF(__pyx_t_18); __pyx_t_18 = 0;
       __pyx_t_15 = __pyx_v_i;
       __pyx_t_12 = __pyx_v_j;
       __pyx_t_9 = -1;
@@ -3399,19 +3402,19 @@ static PyObject *__pyx_f_5ising_energy(__Pyx_memviewslice __pyx_v_S, float __pyx
         __Pyx_RaiseBufferIndexError(__pyx_t_9);
         __PYX_ERR(0, 86, __pyx_L1_error)
       }
-      __pyx_t_16 = __Pyx_PyInt_From_int((*((int *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_S.data + __pyx_t_15 * __pyx_v_S.strides[0]) ) + __pyx_t_12 * __pyx_v_S.strides[1]) )))); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 86, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_16);
-      __pyx_t_17 = PyNumber_Multiply(__pyx_t_18, __pyx_t_16); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 86, __pyx_L1_error)
+      __pyx_t_18 = __Pyx_PyInt_From_int((*((int *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_S.data + __pyx_t_15 * __pyx_v_S.strides[0]) ) + __pyx_t_12 * __pyx_v_S.strides[1]) )))); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 86, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_18);
+      __pyx_t_17 = PyNumber_Multiply(__pyx_t_16, __pyx_t_18); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 86, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_17);
-      __Pyx_DECREF(__pyx_t_18); __pyx_t_18 = 0;
       __Pyx_DECREF(__pyx_t_16); __pyx_t_16 = 0;
+      __Pyx_DECREF(__pyx_t_18); __pyx_t_18 = 0;
       __pyx_t_19 = __pyx_PyFloat_AsFloat(__pyx_t_17); if (unlikely((__pyx_t_19 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 86, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
       __pyx_v_H_neigh = __pyx_t_19;
 
       /* "ising.pyx":87
  *             neighborhood = (S[i, mod(j+1, N)] +S[mod(i+1, N), j] +S[i, mod(j-1, N)] +S[mod(i-1, N), j])
- *             H_neigh = ((J/4)*(neighborhood)+h)*S[i,j]
+ *             H_neigh = -((J/4)*(neighborhood)+h)*S[i,j]
  *             H=H+H_neigh             # <<<<<<<<<<<<<<
  *     return H
  * 
@@ -3421,7 +3424,7 @@ static PyObject *__pyx_f_5ising_energy(__Pyx_memviewslice __pyx_v_S, float __pyx
   }
 
   /* "ising.pyx":88
- *             H_neigh = ((J/4)*(neighborhood)+h)*S[i,j]
+ *             H_neigh = -((J/4)*(neighborhood)+h)*S[i,j]
  *             H=H+H_neigh
  *     return H             # <<<<<<<<<<<<<<
  * 

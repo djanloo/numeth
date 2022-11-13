@@ -10,7 +10,7 @@
             "-fopenmp"
         ],
         "include_dirs": [
-            "/home/djanloo/Desktop/numeth/numeth"
+            "/home/alepi/numeth/numeth"
         ],
         "libraries": [
             "m"
