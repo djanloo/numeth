@@ -20,7 +20,7 @@ set_seed( int((t- int(t))*10000) )
 
 N_celle = 16
 n_temperature = 30
-n_samples = 10
+n_samples = 50
 
 psi = np.zeros((n_temperature, n_samples))
 H = np.zeros((n_temperature, n_samples))
@@ -37,12 +37,12 @@ for i, t in track(enumerate(T), total=n_temperature):
     # Field limit + thermalization
     S = ising(N=N_celle, beta=1/t, J=1.031, h=0.1, N_iter=128)
     for h in [0.003, 0.002, 0.001, 0.0, 0.0, 0.0]:
-        S = ising(N=N_celle, beta=1/t, J=1.0, h=h, N_iter=10, startfrom=S)
+        S = ising(N=N_celle, beta=1/t, J=1.0, h=h, N_iter=100, startfrom=S)
 
     for sample in range(n_samples):
         psi[i, sample] = np.mean(S)
         H[i, sample] = energy(S,1.0,0.0)
-        ising(N=N_celle, beta=1/t, J=1.0, h=0.0 , N_iter=256, startfrom=S)
+        ising(N=N_celle, beta=1/t, J=1.0, h=0.0 , N_iter=1024, startfrom=S)
 
 mean_psi = np.mean(psi, axis=1)
 sigma_psi = np.std(psi, axis=1)
@@ -68,4 +68,4 @@ ax[1].plot(T, (sigma_H**2)/T ,  ls="", marker=".")
 ax[1].set_ylabel(r"$\langle C_v \rangle$")
 
 plt.savefig("chi_cv.png")
-
+plt.show()
