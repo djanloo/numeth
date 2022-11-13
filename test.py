@@ -18,9 +18,9 @@ from rich.progress import track
 t = time()
 set_seed( int((t- int(t))*10000) )
 
-N_celle = 100
-n_temperature = 20
-n_samples = 5
+N_celle = 16
+n_temperature = 30
+n_samples = 10
 
 psi = np.zeros((n_temperature, n_samples))
 H = np.zeros((n_temperature, n_samples))
