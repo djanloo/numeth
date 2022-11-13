@@ -9,6 +9,7 @@ rich = "*"
 line-profiler = "*"
 numpy = "*"
 matplotlib = "*"
+telegram-send = "*"
 
 [dev-packages]
 
