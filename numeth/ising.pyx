@@ -5,8 +5,8 @@ from libc.stdlib cimport rand, srand
 import numpy as np
 cimport cython
 
-# cdef extern from "gigarand/gigarand.c":
-#     float ran2()
+cdef extern from "gigarand/gigarand.c":
+    float ran2()
 
 cdef extern from "limits.h":
     int INT_MAX
@@ -40,10 +40,12 @@ cpdef void set_seed(seed):
     srand(seed)
     return
 
-# def stupid_test():
-#     cdef float a = 0
-#     for i in range(1000000):
-#         a = ran2()
+def uniformity_test():
+    cdef float [:] array_random = np.zeros(1_000_000, dtype=np.float32)
+    cdef int i
+    for i in range(1_000_000):
+        array_random[i] = ran2()
+    return array_random
 
 
 def ising(  unsigned int N=100, 

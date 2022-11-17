@@ -10,8 +10,8 @@ from numeth import ising
 chdir(join(dirname(__file__), "numeth"))
 
 profile = LineProfiler()
-profile.add_function(ising.ising)
-wrap = profile(ising.ising)
-wrap(10, 5, 0.1, 0.0, 10)
+profile.add_function(ising.stupid_test)
+wrap = profile(ising.stupid_test)
+wrap()
 profile.print_stats()
 
