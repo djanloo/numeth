@@ -79,7 +79,7 @@ def ising(  unsigned int N=100,
                                 S[mod(i-1, N), j]
                                 )
                 log_r = beta*(J*neighborhood + h)*(proposal - S[i,j]) 
-                u = randzerone()
+                u = ran2()
                 if log_r > log(u):
                     accepted += 1 
                     S[i,j] = proposal

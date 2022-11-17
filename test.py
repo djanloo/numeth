@@ -30,9 +30,9 @@ def autocorr(y):
 t = time()
 set_seed( int((t- int(t))*10000) )
 
-N_celle = 64
+N_celle = 32
 n_temperature = 30
-n_samples = 3000
+n_samples = 10000
 
 psi = np.zeros((n_temperature, n_samples))
 H = np.zeros((n_temperature, n_samples))
@@ -82,5 +82,3 @@ ax[1].plot(T, (sigma_H**2) ,  ls="", marker=".")
 ax[1].set_ylabel(r"$\langle C_v \rangle$")
 
 splot(fig)
-
-print("nazi zombie gucci gang")
