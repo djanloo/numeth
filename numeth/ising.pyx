@@ -5,6 +5,9 @@ from libc.stdlib cimport rand, srand
 import numpy as np
 cimport cython
 
+# cdef extern from "gigarand/gigarand.c":
+#     float ran2()
+
 cdef extern from "limits.h":
     int INT_MAX
 
@@ -36,6 +39,12 @@ cpdef void set_seed(seed):
     # Sets the time as seed
     srand(seed)
     return
+
+# def stupid_test():
+#     cdef float a = 0
+#     for i in range(1000000):
+#         a = ran2()
+
 
 def ising(  unsigned int N=100, 
             float beta=0.1, 

@@ -3,14 +3,11 @@
 from os import chdir
 from os.path import dirname, join
 from line_profiler import LineProfiler
-from numeth import core
 from numeth import ising
-import numpy as np
 
 # Sets the working directory as the one with the code inside
 # Without this line line_profiler won't find anything
 chdir(join(dirname(__file__), "numeth"))
-
 
 profile = LineProfiler()
 profile.add_function(ising.ising)

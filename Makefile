@@ -1,4 +1,4 @@
-.PHONY: generate profile clear
+.PHONY: generate profile clear cython_clear
 
 generate:
 	@make clear
@@ -21,6 +21,14 @@ hardcoreprofile:
 	@python -m numeth.setup --hardcore --profile
 
 clear:
+	@echo "Cleaning all.."
+	@rm -f numeth/*.so
+	@rm -f numeth/*.html
+	@rm -R -f numeth/build
+	@rm -R -f numeth/__pycache__
+	@echo "Cleaned."
+
+cython_clear:
 	@echo "Cleaning all.."
 	@rm -f numeth/*.c
 	@rm -f numeth/*.so

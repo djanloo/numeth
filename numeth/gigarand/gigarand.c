@@ -50,26 +50,3 @@ float ran2(){
     if ((temp=AM*iy) > RNMX) return RNMX;
     else return temp;
 }
-
-
-// Python link part - follow the API ------------------------------------------------------------------------------------
-
-// Methods table definition
-static PyMethodDef gigarandMethods[] = {
-    {"ran2", ran2, METH_VARARGS, "Ao"},
-    {NULL, NULL, 0, NULL}//Guardian of The Table
-};
-
-// Module definition
-static struct PyModuleDef gigarandmodule = {
-    PyModuleDef_HEAD_INIT,
-    "gigarand",
-    "Fucking gigarand",
-    -1,
-    gigarandMethods
-};
-
-// Initialization function for the module
-PyMODINIT_FUNC PyInit_cnets(void) {
-    return PyModule_Create(&gigarandmodule);
-}

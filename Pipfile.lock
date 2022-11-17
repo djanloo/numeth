@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3696ab7d3b2be56081631fdec805e0adfe8cf518967bf11d8e58369fd0c945ed"
+            "sha256": "82a0000aa14213e635bced289e37896262311932b1067e3f82aa7a6351b210d0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -579,6 +579,11 @@
             ],
             "index": "pypi",
             "version": "==12.6.0"
+        },
+        "serverstd": {
+            "editable": true,
+            "git": "https://github.com/djanloo/serverStd",
+            "ref": "7bcabea1a96648aeb5300d92fe252b38b2212885"
         },
         "setuptools": {
             "hashes": [

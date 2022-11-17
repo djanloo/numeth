@@ -79,7 +79,7 @@ setup(
     include_dirs=includedDir,
     ext_modules=cythonize(  ext_modules, 
                             compiler_directives=cython_compiler_directives,
-                            annotate=True),
+                            annotate=False),
                             script_args=["build_ext"],
                             options={"build_ext": {"inplace": True, "force": True}},
                         )

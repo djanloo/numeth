@@ -12,6 +12,7 @@ matplotlib = "*"
 telegram-send = "*"
 tk = "*"
 pyqt5 = "*"
+serverstd = {editable = true, git = "https://github.com/djanloo/serverStd"}
 
 [dev-packages]
 
