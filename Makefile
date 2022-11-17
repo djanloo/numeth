@@ -8,10 +8,6 @@ profile:
 	@make clear
 	@python -m numeth.setup --profile
 
-notrace:
-	@make clear
-	@python -m numeth.setup --notrace
-
 hardcore:
 	make clear
 	@python -m numeth.setup --hardcore
@@ -22,6 +18,7 @@ hardcoreprofile:
 
 clear:
 	@echo "Cleaning all.."
+	@rm -f numeth/*.c
 	@rm -f numeth/*.so
 	@rm -f numeth/*.html
 	@rm -R -f numeth/build

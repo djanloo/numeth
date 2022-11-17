@@ -8,8 +8,8 @@ from Cython.Build import cythonize
 from rich import print
 
 parser = argparse.ArgumentParser()
+
 parser.add_argument('--profile', action='store_true')
-parser.add_argument('--notrace', action='store_true')
 parser.add_argument('--hardcore', action='store_true')
 
 args = parser.parse_args()
@@ -40,14 +40,6 @@ if args.profile:
     # Activates profiling
     extension_kwargs["define_macros"] = [('CYTHON_TRACE', '1'), ('CYTHON_TRACE_NOGIL', '1')]
 
-# Explicitly turns off tracing
-# Use ony in case you see DCYTHON_TRACE=1 during compilation
-if args.notrace:
-    cython_compiler_directives['linetrace'] = False
-    cython_compiler_directives['binding'] = False
-    # Forcefully turns off tracing
-    extension_kwargs["define_macros"] = [('CYTHON_TRACE', '0'), ('CYTHON_TRACE_NOGIL', '0')]
-
 # Globally boost speed by disabling checks
 # see https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#compiler-directives
 if args.hardcore:
@@ -68,9 +60,9 @@ ext_modules = [
     for cfile in cython_files
 ]
 
+# Adds the random number generator
 ext_modules.append(Extension("gigarand", ["gigarand/gigarand.c"]))
 
-# Sets language level
 print(f"[blue]COMPILER DIRECTIVES[/blue]: {cython_compiler_directives}")
 print(f"[blue]EXT_KWARGS[/blue]: {extension_kwargs}")
 setup(
