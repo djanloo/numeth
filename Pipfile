@@ -6,13 +6,13 @@ name = "pypi"
 [packages]
 cython = "*"
 rich = "*"
-line-profiler = "*"
 numpy = "*"
 matplotlib = "*"
 telegram-send = "*"
 tk = "*"
 pyqt5 = "*"
 serverstd = {editable = true, git = "https://github.com/djanloo/serverStd"}
+line-profiler = "==3.5.1"
 
 [dev-packages]
 
