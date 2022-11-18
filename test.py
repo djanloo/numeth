@@ -30,9 +30,8 @@ def autocorr(y):
 t = time()
 set_seed( int((t- int(t))*10000) )
 
-# Parameri sesso anale
-test_per_git = 12
-N_celle = 1024
+
+N_celle = 254
 n_temperature = 30
 n_samples = 1000
 
