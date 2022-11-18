@@ -30,7 +30,7 @@ def autocorr(y):
 t = time()
 set_seed( int((t- int(t))*10000) )
 
-N_celle = 32
+N_celle = 1024
 n_temperature = 30
 n_samples = 1000
 
@@ -83,3 +83,5 @@ ax[1].plot(T, (sigma_H**2) ,  ls="", marker=".")
 ax[1].set_ylabel(r"$\langle C_v \rangle$")
 
 # splot(fig)
+
+
