@@ -6,14 +6,16 @@ __pycache__/
 # C extensions
 *.so
 numeth/*.c
+*.out
+
 # HTML
 *.html
 
-# Images and videos
+# Images and videos and big data
 *.png 
 *.mp4
 *.gif
-
+*.data
 
 # Distribution / packaging
 .Python
