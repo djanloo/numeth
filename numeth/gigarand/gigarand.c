@@ -13,8 +13,13 @@
 #define EPS 1.2e-7
 #define RNMX (1.0-EPS)
 
+#ifndef C_ONLY
+
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+
+#endif 
+
 
 long idum = 1.0;
 
