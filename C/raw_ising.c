@@ -3,12 +3,40 @@
 #define C_ONLY
 #include "numeth/gigarand/gigarand.c"
 #include <math.h>
-#include <time.h>
+#include <ctype.h>
+#include <unistd.h>
+#include <sys/time.h>
 
+#define TIME_ESTIMATE_BLOCK 5000
 
-#define N 100
-#define T_BLOCK 10
-#define N_T_BLOCKS 1000
+long int block_time_ms = 0;
+int time_estimate_count;
+int time_blocks = 0;
+struct timeval first_call, last_call;
+int initialized = 0;
+int print_config = 0;
+
+void estimate_time(){
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    if (initialized == 0){
+        block_time_ms = (long int) (1e3*(now.tv_sec - first_call.tv_sec) + 1e-3*(now.tv_usec - first_call.tv_usec));
+        time_estimate_count++;
+        initialized = 1;
+    }else{
+        block_time_ms = block_time_ms*(time_estimate_count);
+        block_time_ms += (long int) (1e3*(now.tv_sec - last_call.tv_sec) + 1e-3*(now.tv_usec - last_call.tv_usec));
+        time_estimate_count++;
+        block_time_ms /= time_estimate_count;
+    }
+    last_call = now;
+    // printf("block time: %ld\n", block_time_ms);
+    // printf("remaining blocks: %d\n", time_blocks - time_estimate_count);
+    printf("remaining: %.2lf seconds\n", (time_blocks - time_estimate_count)*block_time_ms*1e-3);
+
+    return;
+}
+    
 
 int mod(int k, int M){
     if (k > 0){
@@ -18,90 +46,140 @@ int mod(int k, int M){
     return M+k;
 };
 
-void ising(float beta, float J, float h){
+void ising(int l, float beta, float h, int n_steps){
 
-    // time management
-    time_t start, end;
-    time_t blck_start, blck_end;
-    double time_used;
-    double blck_mean_time = 0;
-    time(&start);
-     
+    gettimeofday(&first_call, NULL);
     // declarations
-    int S[N][N][T_BLOCK];
-    printf("size of S is %e\n", (double)sizeof(S));
-    int proposal, neighborhood, log_r, accepted=0;
+    short int S[l][l];    
+    short int proposal, neighborhood, log_r, accepted=0;
     float u;
 
+    // check for overflow
+    printf("Size of S is %e\n", (double)sizeof(S));
+
     // initialization of matrix
-    for (int i=0; i<N; i++){
-        for (int j=0; j<N; j++){
-            S[i][j][0] = 2*(rand()%2) - 1;
+    for (int i=0; i<l; i++){
+        for (int j=0; j<l; j++){
+            S[i][j] = 2*(rand()%2) - 1;
         };
     };
 
     // erases the storage file
-    FILE *f = fopen("ising.data", "w");
-    fclose(f);
+    char conf_filename_buffer[50];
+    char stat_filename_buffer[50];
 
-    printf("init fine\n");
+    snprintf(conf_filename_buffer, 50, "data/conf_h_%.4lf_beta_%.4lf_L_%d_T_%d.data", h, beta, l, n_steps );
+    snprintf(stat_filename_buffer, 50, "data/stat_h_%.4lf_beta_%.4lf_L_%d_T_%d.data", h, beta, l, n_steps );
+    
+    FILE * configs = fopen(conf_filename_buffer, "w");
+    FILE * stats = fopen(stat_filename_buffer, "w");
+    fprintf(stats, "#M\tH\n");
 
+    printf("Init. Done\n");
 
     // true cycle of metropolis hastings
-    for (int blck_count=0; blck_count < N_T_BLOCKS; blck_count++){
-        time(&blck_start);
+    for (int iter=0; iter < n_steps; iter++){
 
-        for (int blck_iter=0; blck_iter < T_BLOCK; blck_iter++){
+        for (int i=0; i<l; i++){
+            for (int j=0; j<l; j++){
+                    proposal = 2*(rand()%2) - 1;
+                    neighborhood = (
+                                    S[i][ mod(j+1, l)] +
+                                    S[mod(i+1, l)][j] +
+                                    S[i][ mod(j-1, l)] +
+                                    S[mod(i-1, l)][j]
+                                    );
+                    log_r = beta*(neighborhood + h)*(proposal - S[i][j]);
+                    u = ran2();
+                    if (log_r > log(u)){
+                        accepted++ ;
+                        S[i][j] = proposal;
+                    }
+                    else{
+                        S[i][j] = S[i][j];
+                    }
 
-            for (int i=0; i<N; i++){
-                for (int j=0; j<N; j++){
-                        proposal = 2*(rand()%2) - 1;
-                        neighborhood = (
-                                        S[i][ mod(j+1, N)][blck_iter] +
-                                        S[mod(i+1, N)][j][blck_iter] +
-                                        S[i][ mod(j-1, N)][blck_iter] +
-                                        S[mod(i-1, N)][j][blck_iter]
-                                        );
-                        log_r = beta*(J*neighborhood + h)*(proposal - S[i][j][blck_iter]);
-                        u = ran2();
-                        if (log_r > log(u)){
-                            accepted++ ;
-                            S[i][j][blck_iter+1] = proposal;
-                        }
-                        else{
-                            S[i][j][blck_iter+1] = S[i][j][blck_iter];
-                        }
-                };
+                    // TEST for save/read
+                    // black frame -> white frame
+                    // S[i][j]= T_BLOCK*blck_count + blck_iter + i + j;
+                    if (print_config == 1){fprintf(configs, "%d ", S[i][j]);}
+            };
+            if (print_config == 1){fprintf(configs, "\n");}
+        };
+        // prints stats
+        float H=0, M=0;
+        float H_neigh;
+
+        for (int i =0; i < l; i++){
+            for (int j =0; j < l; j++){
+                neighborhood = (S[i][mod(j+1, l)] + S[mod(i+1, l)][j] + S[i][mod(j-1, l)] + S[mod(i-1, l)][j]);
+                H_neigh = -((1.0/4)*(neighborhood)+h)*S[i][j];
+                H += H_neigh;
+                M += S[i][j];
             };
         };
+        fprintf(stats, "%lf %lf\n", M, H);
 
-        // saves to file
-        FILE *f = fopen("ising.data", "a");
-        for (int iter =0; iter<T_BLOCK;iter++){
-            for (int i =0; i<N;i++){
-                for (int j =0; j<N;j++){
-                    fprintf(f, "%d ", S[i][j][iter]);
-                }
+        if ( (iter != 0) &&(iter % TIME_ESTIMATE_BLOCK == 0)){
+            estimate_time();
+        }
+    };
+
+
+    
+    // fclose(configs);
+    fclose(stats);
+
+    printf("Total time: %lf seconds\n", (double)(last_call.tv_sec - first_call.tv_sec));
+    printf("--------------- END ------------\n");
+};
+
+int main (int argc, char **argv)
+{
+    int n_steps = 0, l = 0;
+    float h = 0.0, beta = 0.0;
+    int c;
+
+    opterr = 0;
+
+
+    while ((c = getopt (argc, argv, "l:b:h:t:c")) != -1)
+    switch (c)
+        {
+        case 'l':
+            l = atoi(optarg);
+            break;
+        case 'b':
+            beta = atof(optarg);
+            break;
+        case 'h':
+            h = atof(optarg);
+            break;
+        case 't':
+            n_steps = atoi(optarg);
+            break;
+        case 'c':
+            printf("Print configuration activated\n");
+            print_config = 1;
+            break;
+        case '?':
+            if (optopt == 'c'){
+                printf("Print configuration activated");
+                print_config = 1;
+            }else if (isprint (optopt)){
+                fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+            }else{
+                fprintf (stderr,
+                        "Unknown option character `\\x%x'.\n",
+                        optopt);
+                return 1;
             }
-            fprintf(f, "\n");
+            break;
+        default:
+        printf("Gimme an input nigga\n");
+        abort ();
         }
-        // fwrite(S, sizeof(int), sizeof(S), f);
-        fclose(f);
-
-        time(&blck_end);
-        blck_mean_time = (blck_mean_time*blck_count + difftime(blck_end,blck_start))/(blck_count + 1);
-        if (blck_count % 100 == 0){
-            printf("Estimated remaining time: %.1lf", (N_T_BLOCKS - blck_count)*blck_mean_time);
-            printf("\t (%d / %d)", blck_count, N_T_BLOCKS);
-            printf("\t blck_time/N_T: %lf\n", blck_mean_time/(float)T_BLOCK);
-        }
-
-    }
-    time(&end);
-    printf("\tTotal elapsed time:%.1lf \n", difftime(end, start));
-};
-
-int main(){
-    ising(2.0, 0.1, 0.1);
-    return 0;
-};
+    printf("Starting (L=%d, n_steps=%d, beta=%lf, h=%lf)\n", l, n_steps, beta, h);
+    time_blocks = ((int) n_steps)/((int)TIME_ESTIMATE_BLOCK);
+    ising(l, beta, h, n_steps);
+}
