@@ -18,6 +18,7 @@ numeth/*.c
 *.gif
 *.data
 *.npy
+*.csv
 
 #Ignored folder
 omit

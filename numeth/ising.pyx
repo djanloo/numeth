@@ -6,7 +6,11 @@ import numpy as np
 cimport cython
 
 cdef extern from "gigarand/gigarand.c":
+    float idum
     float ran2()
+
+# cdef float ran2_nogil() nogil:
+#     return ran2()
 
 cdef extern from "limits.h":
     int INT_MAX
@@ -35,17 +39,22 @@ cdef unsigned int mod(int a, int b):
     cdef int r = a % b
     return r if r >= 0 else r + b
 
+# cdef unsigned int mod_nogil(int a, int b) nogil:
+#     cdef int r = a % b
+#     return r if r >= 0 else r + b
+
 cpdef void set_seed(seed):
     # Sets the time as seed
+    idum = <float> seed
     srand(seed)
     return
 
-def uniformity_test():
-    cdef float [:] array_random = np.zeros(1_000_000, dtype=np.float32)
-    cdef int i
-    for i in range(1_000_000):
-        array_random[i] = ran2()
-    return array_random
+# def uniformity_test():
+#     cdef float [:] array_random = np.zeros(1_000_000, dtype=np.float32)
+#     cdef int i
+#     for i in range(1_000_000):
+#         array_random[i] = ran2()
+#     return array_random
 
 
 def ising(  unsigned int N=100, 
@@ -68,6 +77,7 @@ def ising(  unsigned int N=100,
     cdef unsigned int i, j, iter_index
     cdef float log_r, u
 
+   
     for iter_index in range(N_iter):
         for i in range(N):
             for j in range(N):
@@ -83,7 +93,6 @@ def ising(  unsigned int N=100,
                 if log_r > log(u):
                     accepted += 1 
                     S[i,j] = proposal
-    # print(f"Accepted proposals: {accepted}")
     return S
 
 cpdef energy(int [:,:] S, float J, float h):
@@ -96,5 +105,5 @@ cpdef energy(int [:,:] S, float J, float h):
             neighborhood = (S[i, mod(j+1, N)] +S[mod(i+1, N), j] +S[i, mod(j-1, N)] +S[mod(i-1, N), j])
             H_neigh = -((J/4)*(neighborhood)+h)*S[i,j]
             H=H+H_neigh
-    return H
+    return H/N**2
 
