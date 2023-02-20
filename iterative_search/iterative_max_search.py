@@ -17,7 +17,7 @@ EURISTIC_FILE = "euristic_values.csv"
 SCHED_FILE = "schedule.csv"
 
 N_SAMPLES = 10_0
-N_ITERS = 10
+CHAIN_THIN = 10
 BOOTSTRAP_BINSIZES = [10,20]
 BOOTSTRAP_RESAMPLES = 300
 Ls = [10]
@@ -44,7 +44,7 @@ print("-----------------------------------------------------------")
 mp_scheduler(schedule_df[schedule_df.iter==0], 
 			savefile=f"chain_iter_0.csv", 
 			n_samples=N_SAMPLES, 
-			n_iters=N_ITERS,
+			n_iters=CHAIN_THIN,
 			n_processes=4)
 
 
@@ -88,7 +88,7 @@ for it in range(PROPOSAL_N_ITER):
 	# RUN THE SCHEDULED SIMULATIONS
 	mp_scheduler(schedule_df[schedule_df.iter==it+1], 
 				savefile=f"chain_iter_{it+1}.csv", 
-				n_iters=N_ITERS, 
+				n_iters=CHAIN_THIN, 
 				n_samples=N_SAMPLES,
 				n_processes=4)
 	
