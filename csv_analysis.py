@@ -7,7 +7,7 @@ from numeth.utils import bootstrap
 
 from rich.progress import track
 
-experim = pd.read_csv("ising_100.csv")
+experim = pd.read_csv("ising_near_transition.csv")
 betas = np.unique(experim.beta.values)
 Ls = np.unique(experim.L.values)
 
@@ -29,4 +29,4 @@ for L in Ls:
         
         bootstrap_df = pd.concat([bootstrap_df, block_df], ignore_index=True)
 
-    bootstrap_df.to_csv("bootstrapped_100.csv")
+    bootstrap_df.to_csv("bootstrapped_near_transition.csv")

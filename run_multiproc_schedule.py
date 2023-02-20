@@ -43,15 +43,12 @@ def generate(queue, n_samples, ising_params):
 
 results_df = pd.DataFrame(columns=["PID", "iter", "beta", "L", "m", "E"])
 
-betas = np.linspace(0.42, 0.45, 10)
-temps_done = 0
+schedule = pd.read_csv("refinement_iter_1.csv")
 
-for beta in betas:
-    start = perf_counter()
-    for N in [10, 20, 30, 40, 50, 60 ,80, 100]:
+for index, scheduled_run in schedule.iterrows():
 
         # Sets the paramteres
-        ising_params = dict(N=N, beta=beta, N_iter=100, h=0.0)
+        ising_params = dict(N=scheduled_run.L, beta=scheduled_run.L, N_iter=100, h=0.0)
         n_samples = 4000
         q = mp.Queue()
 
@@ -80,7 +77,5 @@ for beta in betas:
 
         partial = pd.DataFrame(results, columns=["PID", "iter", "beta","L", "m", "E"])
         results_df = pd.concat([results_df, partial], ignore_index=True)
-    end = perf_counter()
-    temps_done += 1
-    print(f"---------------- {end-start:.2f} sec -- remaining {(end-start)*(len(betas) - temps_done)/60:.2f} minutes ----------------")
-results_df.to_csv("ising_near_transition.csv")
+
+results_df.to_csv("refinement_iter_1.csv")
