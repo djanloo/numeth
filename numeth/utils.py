@@ -89,7 +89,8 @@ def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
         q = mp.Queue()
 
         # Starts the runners
-        runners = [mp.Process(target=generate, args=(q, n_samples, ising_params)) for _ in range(4)]
+        n_processes = params.get("n_processes", 4)
+        runners = [mp.Process(target=generate, args=(q, n_samples, ising_params)) for _ in range(n_processes)]
         for p in runners:
             p.start()
 
@@ -165,3 +166,24 @@ def means_and_errors(scheduler, chain_df, random_variables, estimators, estimato
             analysis = pd.concat([analysis, row], ignore_index=True)
     return analysis
 
+def propose_by_centroid(x,p, M=5):
+    return np.mean(x[np.argsort(p)][-M:])
+
+# def propose_new_temperature(betas, probabilities, chain_length=50):
+#     """Propose a new temperature using a discrete MCMC using chi as a propbability"""
+
+#     index_chain = np.zeros(chain_length)
+#     index_chain[0] = np.random.randint(len(betas))
+
+#     for j in range(chain_length - 1):
+#         proposal = np.random.randint(len(x))
+#         if proposal < 0 or proposal >= len(x):
+#             index_chain[j+1] = index_chain[j]
+#         elif probabilities[proposal]/probabilities[index_chain[j]]] > np.random.uniform(0, 1):
+#             chain.append(proposal)
+#         else:
+#             chain.append(chain[-1])
+#     new_x = np.mean([x[u] for u in chain])
+#     x = np.append(x, [new_x])
+#     y = np.append(y, [f(new_x)])
+#     c = np.append(c, [i+1])

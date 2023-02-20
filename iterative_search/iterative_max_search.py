@@ -15,10 +15,14 @@ from rich.progress import track
 
 EURISTIC_FILE = "euristic_values.csv"
 SCHED_FILE = "schedule.csv"
-NITER = 5
-N_SAMPLES = 10_000
-N_ITERS = 100
+
+N_SAMPLES = 10_0
+N_ITERS = 10
+BOOTSTRAP_BINSIZES = [10,20]
+BOOTSTRAP_RESAMPLES = 300
 Ls = [10]
+
+PROPOSAL_N_ITER = 5
 
 # euristic_df = pd.read_csv(CHIFILE)
 euristic_df = pd.DataFrame()
@@ -37,10 +41,14 @@ for l in Ls:
 print("INITIAL SCHEDULE: -----------------------------------------")
 print(schedule_df)
 print("-----------------------------------------------------------")
-mp_scheduler(schedule_df[schedule_df.iter==0], savefile=f"chain_iter_0.csv", n_samples=N_SAMPLES, n_iters=N_ITERS)
+mp_scheduler(schedule_df[schedule_df.iter==0], 
+			savefile=f"chain_iter_0.csv", 
+			n_samples=N_SAMPLES, 
+			n_iters=N_ITERS,
+			n_processes=4)
 
 
-for it in range(NITER):
+for it in range(PROPOSAL_N_ITER):
 	print(f"ITERATION: {it} ===================================================")
 
 	current_iter_chain = pd.read_csv(f"chain_iter_{it}.csv")
@@ -52,7 +60,7 @@ for it in range(NITER):
 									current_iter_chain,
 									["m"], 
 									[lambda x: np.mean(x**2) - np.mean(np.abs(x))**2], 
-									["ultravar"], bootstrap_args=dict(bins= [10, 20, 30, 40 , 100, 200], n_resamples=300)
+									["ultravar"], bootstrap_args=dict(bins= BOOTSTRAP_BINSIZES, n_resamples=BOOTSTRAP_RESAMPLES)
 									)
 	this_iter_euristic_df["iter"] = it
 	euristic_df = pd.concat([euristic_df, this_iter_euristic_df])
@@ -67,7 +75,7 @@ for it in range(NITER):
 		new_beta = round(new_beta, 5)
 
 		print(f"L = {l}\tnew_beta = {new_beta}")
-		
+
 		row = dict(iter=it+1, L=l, beta=round(new_beta, 5))
 		row = pd.DataFrame(row, index = [0])
 		schedule_df = pd.concat([schedule_df, row], ignore_index=True)
@@ -78,8 +86,11 @@ for it in range(NITER):
 	schedule_df.to_csv(SCHED_FILE)
 	euristic_df.to_csv(EURISTIC_FILE)
 	# RUN THE SCHEDULED SIMULATIONS
-	mp_scheduler(schedule_df[schedule_df.iter==it+1], savefile=f"chain_iter_{it+1}.csv", 
-				n_iters=N_ITERS, n_samples=N_SAMPLES)
+	mp_scheduler(schedule_df[schedule_df.iter==it+1], 
+				savefile=f"chain_iter_{it+1}.csv", 
+				n_iters=N_ITERS, 
+				n_samples=N_SAMPLES,
+				n_processes=4)
 	
 sns.lineplot(data=euristic_df, x="beta", y="ultravar_m", hue="L")
 plt.show()
