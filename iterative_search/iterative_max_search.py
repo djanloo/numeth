@@ -10,7 +10,7 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
  
 
-from numeth.utils import bootstrap, mp_scheduler, means_and_errors
+from numeth.utils import bootstrap, mp_scheduler, means_and_errors, propose_by_centroid
 from rich.progress import track
 
 EURISTIC_FILE = "euristic_values.csv"
@@ -63,24 +63,15 @@ for it in range(NITER):
 	# PROPOSE NEW BETAS
 	for l in Ls:
 		subset = euristic_df.loc[euristic_df.L == l].sort_values("beta").reset_index()
-		argmax = np.argmax(subset.ultravar_m.values)
-		if argmax < 0:
-			print(f"Error in argmax: values were {subset.ultravar_m.values}")
+		new_beta = propose_by_centroid(subset.beta.values, subset.ultravar_m.values)
+		new_beta = round(new_beta, 5)
 
-		new_betas = []
-		if argmax > 2:
-			new_betas.append(0.5*(subset.loc[argmax - 2].beta + subset.loc[argmax].beta))
-			# new_betas.append(np.random.uniform( subset.loc[argmax - 3].beta, subset.loc[argmax].beta) )
-		if argmax < len(subset.ultravar_m.values) - 2 :
-			new_betas.append(0.5*(subset.loc[argmax + 2].beta + subset.loc[argmax].beta))
-			# new_betas.append(np.random.uniform( subset.loc[argmax + 3].beta, subset.loc[argmax].beta) )
+		print(f"L = {l}\tnew_beta = {new_beta}")
+		
+		row = dict(iter=it+1, L=l, beta=round(new_beta, 5))
+		row = pd.DataFrame(row, index = [0])
+		schedule_df = pd.concat([schedule_df, row], ignore_index=True)
 
-
-		print(f"L = {l}\told_betamax = {subset.loc[argmax].beta} ------> new_betas {new_betas}")
-		for nb in new_betas:
-			row = dict(iter=it+1, L=l, beta=round(nb, 5))
-			row = pd.DataFrame(row, index = [0])
-			schedule_df = pd.concat([schedule_df, row], ignore_index=True)
 	print(f"SCHEDULE ITERATION {it+1}: --------------------------------------------")
 	print(schedule_df.loc[schedule_df.iter==it+1])
 	print("------------------------------------------------------------------------")
