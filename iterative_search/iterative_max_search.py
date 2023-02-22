@@ -10,19 +10,20 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
  
 
-from numeth.utils import bootstrap, mp_scheduler, means_and_errors, propose_by_centroid
+from numeth.utils import bootstrap, mp_scheduler, means_and_errors, propose_by_edges
 from rich.progress import track
 
 EURISTIC_FILE = "euristic_values.csv"
 SCHED_FILE = "schedule.csv"
 
-N_SAMPLES = 10_0
-CHAIN_THIN = 10
-BOOTSTRAP_BINSIZES = [10,20]
-BOOTSTRAP_RESAMPLES = 300
-Ls = [10]
+N_SAMPLES = 40_000
+CHAIN_THIN = 100
+BOOTSTRAP_BINSIZE = 0.2
+BOOTSTRAP_RESAMPLES = 1000
+Ls = [10, 20, 30]
 
-PROPOSAL_N_ITER = 5
+PROPOSAL_N_ITER = 4
+N_STARTING_BETAS = 14
 
 # euristic_df = pd.read_csv(CHIFILE)
 euristic_df = pd.DataFrame()
@@ -30,7 +31,7 @@ schedule_df = pd.DataFrame()
 
 # FIRST ITERATION
 Ls = np.array(Ls)
-betas_0 = np.array([round(u,5) for u in np.linspace(0.35, 0.5, 8)])
+betas_0 = np.array([round(u,5) for u in np.linspace(0.35, 0.5, N_STARTING_BETAS)])
 
 for l in Ls:
 	for b in betas_0:
@@ -60,7 +61,7 @@ for it in range(PROPOSAL_N_ITER):
 									current_iter_chain,
 									["m"], 
 									[lambda x: np.mean(x**2) - np.mean(np.abs(x))**2], 
-									["ultravar"], bootstrap_args=dict(bins= BOOTSTRAP_BINSIZES, n_resamples=BOOTSTRAP_RESAMPLES)
+									["ultravar"], bootstrap_args=dict(binsize=BOOTSTRAP_BINSIZE, n_resamples=BOOTSTRAP_RESAMPLES)
 									)
 	this_iter_euristic_df["iter"] = it
 	euristic_df = pd.concat([euristic_df, this_iter_euristic_df])
@@ -71,14 +72,15 @@ for it in range(PROPOSAL_N_ITER):
 	# PROPOSE NEW BETAS
 	for l in Ls:
 		subset = euristic_df.loc[euristic_df.L == l].sort_values("beta").reset_index()
-		new_beta = propose_by_centroid(subset.beta.values, subset.ultravar_m.values)
-		new_beta = round(new_beta, 5)
+		new_betas = propose_by_edges(subset.beta.values, subset.ultravar_m.values)
+		new_betas = np.around(new_betas, 5)
 
-		print(f"L = {l}\tnew_beta = {new_beta}")
+		print(f"L = {l}\tnew_betas = {new_betas}")
 
-		row = dict(iter=it+1, L=l, beta=round(new_beta, 5))
-		row = pd.DataFrame(row, index = [0])
-		schedule_df = pd.concat([schedule_df, row], ignore_index=True)
+		for nb in new_betas:
+			row = dict(iter=it+1, L=l, beta=nb)
+			row = pd.DataFrame(row, index=[0])
+			schedule_df = pd.concat([schedule_df, row], ignore_index=True)
 
 	print(f"SCHEDULE ITERATION {it+1}: --------------------------------------------")
 	print(schedule_df.loc[schedule_df.iter==it+1])

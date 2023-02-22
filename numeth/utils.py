@@ -7,7 +7,7 @@ from time import perf_counter
 from rich.progress import track
 
 from .ising import set_seed, ising, energy
-
+from.stats import moving_block_bootstrap as mbb
 
 def autocorr(y):
     x = y.copy()
@@ -15,6 +15,9 @@ def autocorr(y):
     x /= np.std(x)
     result = np.correlate(x, x, mode='full')/len(x)
     return result[result.size//2:]
+
+def estimate_tau(x):
+    return np.argmax(np.cumsum(autocorr(x)))
 
 def bootstrap(data, function, n_resamples = 500):
     N = len(data)
@@ -25,29 +28,6 @@ def bootstrap(data, function, n_resamples = 500):
         bootstrap_distrib.append(function(fake_sample))
     
     return np.mean(bootstrap_distrib), np.std(bootstrap_distrib)
-
-def bin_bootstrap(data, function, n_resamples, bins_sizes):
-    N = len(data)
-    results = pd.DataFrame(columns = ["bin_size", "estimator_mean", "estimator_error"])
-    for i, bs in enumerate(bins_sizes):
-        n_blocks = N//bs
-        estimators = []
-        for samp in range(n_resamples):
-            fake_sample = []
-            for block_index in range(n_blocks):
-                index = np.random.randint(N)
-                if index + bs < N:
-                    block = data[index: index+bs]
-                else:
-                    a = index + bs - N
-                    block = np.concatenate((data[0:a], data[index:]))
-                fake_sample.append(block)
-            estimators.append(function(np.array(fake_sample)))
-        row = dict(bin_size=bs, estimator_mean= np.mean(estimators), estimator_error= np.std(estimators))
-        row = pd.DataFrame(row, index = [0])
-        results = pd.concat([results, row], ignore_index=True)
-    return results 
-
 
 def generate(queue, n_samples, ising_params):
     """Single-processor execution of Ising simulation"""
@@ -63,16 +43,13 @@ def generate(queue, n_samples, ising_params):
     burn_in_params["N_iter"] = 1000 
     
     set_seed(PID)
-
-    time_info = datetime.now()
-    print(f"{time_info.hour}:{time_info.minute}:{time_info.second} >>> PID {PID} " + "\t".join([f"{key}: {value}" for key, value in ising_params.items()]))
     
     S = ising(**burn_in_biasing_params)     # bias burn-in
     ising(**burn_in_params, startfrom=S)    # thermal burn-in
    
     for i in range(n_samples):
         ising(startfrom=S, **ising_params)
-        queue.put((PID, i, ising_params["beta"], ising_params["N"], np.mean(S), energy(S, 1.0, 0.0) ))
+        queue.put((PID, i, ising_params["beta"], ising_params["L"], np.mean(S), energy(S, 1.0, 0.0) ))
     queue.put(None)
 
 
@@ -82,9 +59,13 @@ def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
     results_df = pd.DataFrame(columns=["PID", "iter", "beta", "L", "m", "E"])
 
     for index, scheduled_run in schedule.iterrows():
-
+        start = perf_counter()
         # Sets the paramteres
-        ising_params = dict(N=scheduled_run.L, beta=scheduled_run.beta, N_iter=params["n_iters"], h=0.0)
+        ising_params = dict(L=scheduled_run.L, 
+                            beta=scheduled_run.beta, 
+                            N_iter=params["n_iters"], 
+                            h=0.0)
+
         n_samples = params["n_samples"]
         q = mp.Queue()
 
@@ -93,6 +74,14 @@ def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
         runners = [mp.Process(target=generate, args=(q, n_samples, ising_params)) for _ in range(n_processes)]
         for p in runners:
             p.start()
+
+        time_info = datetime.now()
+        print(f"{time_info.hour:2}:{time_info.minute:2}:{time_info.second:2} >>> " + 
+                "\t".join([f"{key}: {value}" for key, value in params.items()])+
+                " " +
+                "\t".join([f"{key}: {value}" for key, value in ising_params.items()]),
+                end = "", flush=True
+            )
 
         # Listens to the runners
         results = []
@@ -114,7 +103,7 @@ def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
 
         partial = pd.DataFrame(results, columns=["PID", "iter", "beta","L", "m", "E"])
         results_df = pd.concat([results_df, partial], ignore_index=True)
-        print("----------------------------------------------------------------------")
+        print(f" >>>>> {perf_counter() - start:.1f} seconds")
     results_df.to_csv(savefile)
 
 def schedule_from_chains(chains_df):
@@ -128,7 +117,7 @@ def schedule_from_chains(chains_df):
     return scheduler
 
 def means_and_errors(scheduler, chain_df, random_variables, estimators, estimators_names,
-                        bootstrap_args = dict(n_resamples = 500, bins = [20,50,100, 200])):
+                        bootstrap_args = None):
     """Takes a chainfile outputted by mp_scheduler() and estimates stuff.
     returns a dataframe (beta, L, estim1, err_estim1, ...)
 
@@ -149,17 +138,13 @@ def means_and_errors(scheduler, chain_df, random_variables, estimators, estimato
                 for estimator, est_name, est_errname in zip(estimators, estimators_names, errnames):
                     i_means, i_errs = [], []
                     all_chains = chain_df.loc[(chain_df.L==l)&(chain_df.beta==b)]
-                    print(f"Estimated taus for {rv}:")
                     for pid in np.unique(all_chains.PID):
-                        independent_run = all_chains.loc[all_chains.PID == pid]
-                        tau = np.argmax(np.cumsum(autocorr(independent_run[rv])))
-                        print(tau, end = ", ")
-                        if max(bootstrap_args["bins"]) < tau:
-                            print(f"WARNING (L={l}, beta={b:.2}): max bin size ({max(bootstrap_args['bins'])}) is shorter than autocorrelation time ({tau})")
-                        partial = bin_bootstrap(independent_run[rv].values, estimator, bootstrap_args["n_resamples"] ,bootstrap_args["bins"])
-                        worst_err_index = np.argmax(partial.estimator_error.values)
-                        i_means.append(partial.estimator_mean.values[worst_err_index])
-                        i_errs.append(partial.estimator_error.values[worst_err_index])
+                        independent_run = all_chains.loc[all_chains.PID == pid]                                            
+                        estimator_mean, estimator_error = mbb(independent_run[rv].values.astype('float32'), estimator, n_resamples=bootstrap_args["n_resamples"])
+                        
+                        i_means.append(estimator_mean)
+                        i_errs.append(estimator_error)
+
                     row[est_name+ "_" +rv] = np.mean(i_means)
                     row[est_errname + "_" +rv] = np.sqrt(np.sum(np.array(i_errs)**2))
             row = pd.DataFrame(row, index=[0])
@@ -169,21 +154,19 @@ def means_and_errors(scheduler, chain_df, random_variables, estimators, estimato
 def propose_by_centroid(x,p, M=5):
     return np.mean(x[np.argsort(p)][-M:])
 
-# def propose_new_temperature(betas, probabilities, chain_length=50):
-#     """Propose a new temperature using a discrete MCMC using chi as a propbability"""
 
-#     index_chain = np.zeros(chain_length)
-#     index_chain[0] = np.random.randint(len(betas))
+def propose_by_edges(x, p, n_edges=2):
+    x, p= np.array(x), np.array(p)
 
-#     for j in range(chain_length - 1):
-#         proposal = np.random.randint(len(x))
-#         if proposal < 0 or proposal >= len(x):
-#             index_chain[j+1] = index_chain[j]
-#         elif probabilities[proposal]/probabilities[index_chain[j]]] > np.random.uniform(0, 1):
-#             chain.append(proposal)
-#         else:
-#             chain.append(chain[-1])
-#     new_x = np.mean([x[u] for u in chain])
-#     x = np.append(x, [new_x])
-#     y = np.append(y, [f(new_x)])
-#     c = np.append(c, [i+1])
+    sort = np.argsort(x)
+    x = x[sort]
+    p = p[sort]
+
+    argmax = np.argmax(p)
+    new_xs = []
+    for i in range(n_edges):
+        if argmax >= 1 + i:
+            new_xs.append( 0.5*(x[argmax - (i)] + x[argmax-(i+1)]) )
+        if argmax < len(x) - (1 + i):
+            new_xs.append( 0.5*(x[argmax + (i)] + x[argmax+(1+i)]) )
+    return np.array(new_xs)
