@@ -57,7 +57,7 @@ cpdef void set_seed(seed):
 #     return array_random
 
 
-def ising(  unsigned int N=100, 
+def ising(  unsigned int L=10, 
             float beta=0.1, 
             float J=1.0,  
             float h=1.0, 
@@ -66,7 +66,7 @@ def ising(  unsigned int N=100,
             init="random"):
     
     # Creates the matrix
-    cdef int [:, :] S = np.ones((N,N),dtype=np.dtype("i"))
+    cdef int [:, :] S = np.ones((L,L),dtype=np.dtype("i"))
 
     if startfrom is not None:
         S = startfrom
@@ -79,31 +79,31 @@ def ising(  unsigned int N=100,
 
    
     for iter_index in range(N_iter):
-        for i in range(N):
-            for j in range(N):
+        for i in range(L):
+            for j in range(L):
                 proposal = 2*(rand()%2) - 1
                 neighborhood = (
-                                S[i, mod(j+1, N)] +
-                                S[mod(i+1, N), j] +
-                                S[i, mod(j-1, N)] +
-                                S[mod(i-1, N), j]
+                                S[i, mod(j+1, L)] +
+                                S[mod(i+1, L), j] +
+                                S[i, mod(j-1, L)] +
+                                S[mod(i-1, L), j]
                                 )
                 log_r = beta*(J*neighborhood + h)*(proposal - S[i,j]) 
                 u = ran2()
                 if log_r > log(u):
-                    accepted += 1 
+                    accepted += 1
                     S[i,j] = proposal
     return S
 
 cpdef energy(int [:,:] S, float J, float h):
     cdef float H=0
     cdef float H_neigh
-    cdef int N = len(S)
+    cdef int L = len(S)
     cdef int i,j
-    for i in range(N): 
-        for j in range(N):
-            neighborhood = (S[i, mod(j+1, N)] +S[mod(i+1, N), j] +S[i, mod(j-1, N)] +S[mod(i-1, N), j])
+    for i in range(L): 
+        for j in range(L):
+            neighborhood = (S[i, mod(j+1, L)] +S[mod(i+1, L), j] +S[i, mod(j-1, L)] +S[mod(i-1, L), j])
             H_neigh = -((J/4)*(neighborhood)+h)*S[i,j]
             H=H+H_neigh
-    return H/N**2
+    return H/L**2
 
