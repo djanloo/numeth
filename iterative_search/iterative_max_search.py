@@ -3,29 +3,33 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+
+# CHANGE WORKING DIRECTORY
 import sys
 import os
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
- 
 
 from numeth.utils import bootstrap, mp_scheduler, means_and_errors, propose_by_edges
 from rich.progress import track
+from rich import print
+from tabulate import tabulate
 
 EURISTIC_FILE = "euristic_values.csv"
 SCHED_FILE = "schedule.csv"
 
-N_SAMPLES = 4_000
-CHAIN_THIN = 100
+N_SAMPLES = 50
+CHAIN_THIN = 10
 BOOTSTRAP_BINSIZE = 0.02
 BOOTSTRAP_RESAMPLES = 1000
-Ls = [100,]
+Ls = [10]
 
 PROPOSAL_N_ITER = 4
 N_STARTING_BETAS = 8
 
-# euristic_df = pd.read_csv(CHIFILE)
+N_PROCESSES = 4
+
 euristic_df = pd.DataFrame()
 schedule_df = pd.DataFrame()
 
@@ -39,21 +43,20 @@ for l in Ls:
 		row = pd.DataFrame(row, index=[0])
 		schedule_df = pd.concat([schedule_df, row], ignore_index=True)
 
-print("INITIAL SCHEDULE: -----------------------------------------")
-print(schedule_df)
-print("-----------------------------------------------------------")
+print("INITIAL SCHEDULE")
+print(tabulate(schedule_df, headers="keys", tablefmt="rounded_grid"))
+
 mp_scheduler(schedule_df[schedule_df.iter==0], 
 			savefile=f"chain_iter_0.csv", 
 			n_samples=N_SAMPLES, 
 			n_iters=CHAIN_THIN,
-			n_processes=4)
+			n_processes=N_PROCESSES)
 
 
 for it in range(PROPOSAL_N_ITER):
-	print(f"ITERATION: {it} ===================================================")
 
+	print(f"\n[bold purple]ITERATION {it} ================================================================== [/bold purple]\n")
 	current_iter_chain = pd.read_csv(f"chain_iter_{it}.csv")
-
 	betas, Ls = np.unique(current_iter_chain.beta), np.unique(current_iter_chain.L)
 	
 	# ESTIMATE CHIs
@@ -65,9 +68,8 @@ for it in range(PROPOSAL_N_ITER):
 									)
 	this_iter_euristic_df["iter"] = it
 	euristic_df = pd.concat([euristic_df, this_iter_euristic_df])
-	print(f"EURISTIC ITERATION {it}: ---------------------------------------------------------")
-	print(euristic_df.loc[euristic_df.iter==it])
-	print("-----------------------------------------------------------------------------------")
+	print(f"\n[bold green]EURISTIC ITERATION [/bold green]{it}")
+	print(tabulate(euristic_df.loc[euristic_df.iter==it], headers="keys", tablefmt="rounded_grid"))
 	
 	# PROPOSE NEW BETAS
 	for l in Ls:
@@ -75,25 +77,27 @@ for it in range(PROPOSAL_N_ITER):
 		new_betas = propose_by_edges(subset.beta.values, subset.ultravar_m.values)
 		new_betas = np.around(new_betas, 5)
 
-		print(f"L = {l}\tnew_betas = {new_betas}")
-
 		for nb in new_betas:
 			row = dict(iter=it+1, L=l, beta=nb)
 			row = pd.DataFrame(row, index=[0])
 			schedule_df = pd.concat([schedule_df, row], ignore_index=True)
+	print()
+	print(f"\n[bold yellow]SCHEDULE ITERATION {it+1}[/bold yellow]")
+	print(tabulate(schedule_df.loc[schedule_df.iter==it+1], headers="keys", tablefmt="rounded_grid"))
 
-	print(f"SCHEDULE ITERATION {it+1}: --------------------------------------------")
-	print(schedule_df.loc[schedule_df.iter==it+1])
-	print("------------------------------------------------------------------------")
 	schedule_df.to_csv(SCHED_FILE)
 	euristic_df.to_csv(EURISTIC_FILE)
+
+
 	# RUN THE SCHEDULED SIMULATIONS
+	print("\n[bold red]SAMPLING[/bold red]")
 	mp_scheduler(schedule_df[schedule_df.iter==it+1], 
 				savefile=f"chain_iter_{it+1}.csv", 
 				n_iters=CHAIN_THIN, 
 				n_samples=N_SAMPLES,
-				n_processes=4)
-	
+				n_processes=N_PROCESSES)
+	print()
+
 sns.lineplot(data=euristic_df, x="beta", y="ultravar_m", hue="L")
 plt.show()
 			

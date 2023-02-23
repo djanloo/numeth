@@ -5,6 +5,7 @@ import multiprocessing as mp
 from datetime import datetime
 from time import perf_counter
 from rich.progress import track
+from rich import print
 
 from .ising import set_seed, ising, energy
 from.stats import moving_block_bootstrap as mbb
