@@ -130,23 +130,16 @@ def means_and_errors(scheduler, chain_df, random_variables, estimators, estimato
     for l in np.unique(scheduler.L.values):
         fixed_l = scheduler.loc[scheduler.L == l]
         for b in track(np.unique(fixed_l.beta), description=f"Bootstrapping for for L = {l}"):
-            fixed_l_b = fixed_l.loc[fixed_l.beta == b]
-
+            # Concatenates chains by pid value
+            concatenated_chains = chain_df.loc[(chain_df.L==l)&(chain_df.beta==b)].sort_values("PID")  
             row = dict(L=l, beta=b)
 
             for rv in random_variables:
-                for estimator, est_name, est_errname in zip(estimators, estimators_names, errnames):
-                    i_means, i_errs = [], []
-                    all_chains = chain_df.loc[(chain_df.L==l)&(chain_df.beta==b)]
-                    for pid in np.unique(all_chains.PID):
-                        independent_run = all_chains.loc[all_chains.PID == pid]                                            
-                        estimator_mean, estimator_error = mbb(independent_run[rv].values.astype('float32'), estimator, n_resamples=bootstrap_args["n_resamples"])
-                        
-                        i_means.append(estimator_mean)
-                        i_errs.append(estimator_error)
-
-                    row[est_name+ "_" +rv] = np.mean(i_means)
-                    row[est_errname + "_" +rv] = np.sqrt(np.sum(np.array(i_errs)**2))
+                for estimator, est_name, est_errname in zip(estimators, estimators_names, errnames):                        
+                    row[est_name+ "_" +rv], row[est_errname + "_" +rv] = mbb(concatenated_chains[rv].values.astype('float32'), 
+                                                                            estimator, 
+                                                                            **bootstrap_args
+                                                                            )
             row = pd.DataFrame(row, index=[0])
             analysis = pd.concat([analysis, row], ignore_index=True)
     return analysis

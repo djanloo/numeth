@@ -33,12 +33,12 @@ def _moving_block_bootstrap_(float [:] x,
     queue.put(None)
         
 
-def moving_block_bootstrap(float [:] x, estimator, n_processes=4, n_resamples=1000):
+def moving_block_bootstrap(float [:] x, estimator, n_processes=4, n_resamples=1000, binsize=0.2):
 
     q = mp.Queue()
     # Starts the runners
     runners = [mp.Process(  target=_moving_block_bootstrap_, 
-                            args=(x, estimator, q, n_resamples//n_processes, 0.2) ) for _ in range(n_processes)]
+                            args=(x, estimator, q, n_resamples//n_processes, binsize) ) for _ in range(n_processes)]
     for p in runners:
         p.start()
 
@@ -54,7 +54,6 @@ def moving_block_bootstrap(float [:] x, estimator, n_processes=4, n_resamples=10
             estimator_samples.append(item)
     for p in runners:
             p.join()
-
     return np.mean(estimator_samples), np.std(estimator_samples)
 
 

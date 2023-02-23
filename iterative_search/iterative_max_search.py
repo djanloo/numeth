@@ -16,14 +16,14 @@ from rich.progress import track
 EURISTIC_FILE = "euristic_values.csv"
 SCHED_FILE = "schedule.csv"
 
-N_SAMPLES = 40_000
+N_SAMPLES = 4_000
 CHAIN_THIN = 100
-BOOTSTRAP_BINSIZE = 0.2
+BOOTSTRAP_BINSIZE = 0.02
 BOOTSTRAP_RESAMPLES = 1000
-Ls = [10, 20, 30]
+Ls = [100,]
 
 PROPOSAL_N_ITER = 4
-N_STARTING_BETAS = 14
+N_STARTING_BETAS = 8
 
 # euristic_df = pd.read_csv(CHIFILE)
 euristic_df = pd.DataFrame()
