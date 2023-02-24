@@ -7,7 +7,7 @@ sns.set()
 data=pd.read_csv("euristic_values.csv")
 colors = sns.color_palette("flare", n_colors=10)
 Ls = np.unique(data.L.values)
-markers = ["x", ".", ">", "+"]
+markers = ["s", ".", "3", "x", "4"]
 
 for l,col in zip(Ls, colors):
     for i in data.iter:

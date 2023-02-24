@@ -6,6 +6,7 @@ from datetime import datetime
 from time import perf_counter
 from rich.progress import track
 from rich import print
+from tabulate import tabulate
 
 from .ising import set_seed, ising, energy
 from.stats import moving_block_bootstrap as mbb
@@ -77,12 +78,14 @@ def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
             p.start()
 
         time_info = datetime.now()
-        print(f"{time_info.hour:2}:{time_info.minute:2}:{time_info.second:2} >>> " + 
-                "\t".join([f"{key}: {value}" for key, value in params.items()])+
-                " " +
-                "\t".join([f"{key}: {value}" for key, value in ising_params.items()]),
-                end = "", flush=True
-            )
+        infos = dict(   time=f"{time_info.hour:2}:{time_info.minute:2}:{time_info.second:2}", 
+                        L=ising_params["L"],
+                        beta=ising_params["beta"],
+                        n_samples=params["n_samples"],
+                        n_iter = params["n_iters"])
+
+        print(tabulate([infos], tablefmt="rounded_grid", headers="keys"), end="")
+        
 
         # Listens to the runners
         results = []
