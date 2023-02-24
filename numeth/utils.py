@@ -99,7 +99,7 @@ def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
             else:
                 results.append(item)
 
-            if finished == 4:
+            if finished == n_processes:
                 break
 
         for p in runners:

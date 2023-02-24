@@ -13,6 +13,8 @@ tk = "*"
 pyqt5 = "*"
 serverstd = {editable = true, git = "https://github.com/djanloo/serverStd"}
 line-profiler = "==3.5.1"
+pandas = "*"
+seaborn = "*"
 
 [dev-packages]
 ipykernel = "*"

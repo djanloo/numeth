@@ -19,11 +19,11 @@ from tabulate import tabulate
 EURISTIC_FILE = "euristic_values.csv"
 SCHED_FILE = "schedule.csv"
 
-N_SAMPLES = 500
+N_SAMPLES = 7500
 CHAIN_THIN = 100
 BOOTSTRAP_BINSIZE = 0.02
 BOOTSTRAP_RESAMPLES = 1000
-Ls = [100]
+Ls = [10]
 
 PROPOSAL_N_ITER = 5
 N_STARTING_BETAS = 8
@@ -64,7 +64,9 @@ for it in range(PROPOSAL_N_ITER):
 									current_iter_chain,
 									["m"], 
 									[lambda x: np.mean(x**2) - np.mean(np.abs(x))**2], 
-									["ultravar"], bootstrap_args=dict(binsize=BOOTSTRAP_BINSIZE, n_resamples=BOOTSTRAP_RESAMPLES)
+									["ultravar"], bootstrap_args=dict(	binsize=BOOTSTRAP_BINSIZE, 
+					   											    	n_resamples=BOOTSTRAP_RESAMPLES,
+									                                    n_processes=N_PROCESSES)
 									)
 	this_iter_euristic_df["iter"] = it
 	euristic_df = pd.concat([euristic_df, this_iter_euristic_df])
