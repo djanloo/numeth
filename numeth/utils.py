@@ -82,7 +82,8 @@ def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
                         L=ising_params["L"],
                         beta=ising_params["beta"],
                         n_samples=params["n_samples"],
-                        n_iter = params["n_iters"])
+                        n_iter = params["n_iters"],
+                        n_processes=n_processes)
 
         print(tabulate([infos], tablefmt="rounded_grid", headers="keys"), end="")
         

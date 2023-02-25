@@ -16,8 +16,13 @@ def _moving_block_bootstrap_(float [:] x,
                             n_resamples,
                             block_size_percentage,
                             ):
+                            
+    # Set the random seed using pid
+    srand(mp.current_process().pid)
+
     cdef int N = len(x)
     cdef int block_size = int(N*block_size_percentage)
+
 
     cdef int i, block_startpoint, sample_number
     cdef int M = N//int(block_size)                          # Number of blocks
