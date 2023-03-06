@@ -9,10 +9,15 @@ colors = sns.color_palette("flare", n_colors=10)
 Ls = np.unique(data.L.values)
 markers = ["s", ".", "3", "x", "4"]
 
+fig, (axchi, axcv) = plt.subplots(2, 1, sharex=True)
+
 for l,col in zip(Ls, colors):
     for i in data.iter:
         subset = data.loc[data.L==l].loc[data.iter == i]
-        plt.errorbar(subset.beta, l**2*subset.ultravar_m, l**2*subset.err_ultravar_m, color=col, ls="",marker=markers[i], capsize=0)
-plt.ylabel(r"$\chi$")
-plt.xlabel(r"$\beta$")
+        axchi.errorbar(subset.beta, l**2*subset.chi, l**2*subset.errchi, color=col, ls="",marker=markers[i], capsize=0)
+        axcv.errorbar(subset.beta, l**2*subset.cv, l**2*subset.errcv, color=col, ls="",marker=markers[i], capsize=0)
+
+axchi.set_ylabel(r"$\chi$")
+axcv.set_ylabel(r"$C_v$")
+axcv.set_xlabel(r"$\beta$")
 plt.show()

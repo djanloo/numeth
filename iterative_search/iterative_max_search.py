@@ -19,11 +19,11 @@ from tabulate import tabulate
 EURISTIC_FILE = "euristic_values.csv"
 SCHED_FILE = "schedule.csv"
 
-N_SAMPLES = 7500
+N_SAMPLES = 2_000
 CHAIN_THIN = 100
 BOOTSTRAP_BINSIZE = 0.02
 BOOTSTRAP_RESAMPLES = 1000
-Ls = [10]
+Ls = [10, 20, 30, 40, 50]
 
 PROPOSAL_N_ITER = 5
 N_STARTING_BETAS = 8
@@ -52,6 +52,13 @@ mp_scheduler(schedule_df[schedule_df.iter==0],
             n_iters=CHAIN_THIN,
             n_processes=N_PROCESSES)
 
+# DEFINES THE ESTIMATORS
+estimators_dict = dict( absM_mean   =["m", lambda x: np.mean(np.abs(x))],
+                        E_mean      = ["E", np.mean],
+                        chi         =["m", lambda x: np.mean(x**2) - np.mean(np.abs(x))**2],
+                        cv          =["E", lambda x: np.mean(x**2) - np.mean(x)**2]
+                        )
+
 
 for it in range(PROPOSAL_N_ITER):
 
@@ -62,9 +69,7 @@ for it in range(PROPOSAL_N_ITER):
     # ESTIMATE CHIs
     this_iter_euristic_df = means_and_errors( schedule_df[schedule_df.iter==it],
                                     current_iter_chain,
-                                    ["m"], 
-                                    [lambda x: np.mean(x**2) - np.mean(np.abs(x))**2], 
-                                    ["ultravar"], bootstrap_args=dict(    binsize=BOOTSTRAP_BINSIZE, 
+                                    estimators_dict, bootstrap_args=dict(    binsize=BOOTSTRAP_BINSIZE, 
                                                                            n_resamples=BOOTSTRAP_RESAMPLES,
                                                                         n_processes=N_PROCESSES)
                                     )
@@ -76,7 +81,7 @@ for it in range(PROPOSAL_N_ITER):
     # PROPOSE NEW BETAS
     for l in Ls:
         subset = euristic_df.loc[euristic_df.L == l].sort_values("beta").reset_index()
-        new_betas = propose_by_edges(subset.beta.values, subset.ultravar_m.values)
+        new_betas = propose_by_edges(subset.beta.values, subset.chi.values)
         new_betas = np.around(new_betas, 5)
 
         for nb in new_betas:
@@ -100,7 +105,9 @@ for it in range(PROPOSAL_N_ITER):
                 n_processes=N_PROCESSES)
     print()
 
-sns.lineplot(data=euristic_df, x="beta", y="ultravar_m", hue="L")
+sns.lineplot(data=euristic_df, x="beta", y="chi", hue="L")
+sns.lineplot(data=euristic_df, x="beta", y="cv", hue="L")
+
 plt.show()
             
 
