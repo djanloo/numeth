@@ -16,7 +16,7 @@ def _moving_block_bootstrap_(float [:] x,
                             n_resamples,
                             block_size_percentage,
                             ):
-                            
+    """Single-process moving block bootstrap. Must be used throught the multiprocess wrapper"""
     # Set the random seed using pid
     srand(mp.current_process().pid)
 
@@ -38,7 +38,11 @@ def _moving_block_bootstrap_(float [:] x,
     queue.put(None)
         
 
-def moving_block_bootstrap(float [:] x, estimator, n_processes=4, n_resamples=1000, binsize=0.2):
+def moving_block_bootstrap(float [:] x, estimator, n_processes=None, n_resamples=1000, binsize=0.2):
+
+    # If not specified, uses all the cores
+    if n_processes is None:
+        n_processes = mp.cpu_count()
 
     q = mp.Queue()
     # Starts the runners
@@ -62,6 +66,31 @@ def moving_block_bootstrap(float [:] x, estimator, n_processes=4, n_resamples=10
     return np.mean(estimator_samples), np.std(estimator_samples)
 
 
+def get_bootstrap_samples(float [:] x, estimator, n_processes=None, n_resamples=1000, binsize=0.2):
 
+    # If not specified, uses all the cores
+    if n_processes is None:
+        n_processes = mp.cpu_count()
+
+    q = mp.Queue()
+    # Starts the runners
+    runners = [mp.Process(  target=_moving_block_bootstrap_, 
+                            args=(x, estimator, q, n_resamples//n_processes, binsize) ) for _ in range(n_processes)]
+    for p in runners:
+        p.start()
+
+    estimator_samples = []
+
+    ended_processes = 0
+    while ended_processes < n_processes:
+
+        item = q.get()
+        if item is None:
+            ended_processes += 1
+        else:
+            estimator_samples.append(item)
+    for p in runners:
+            p.join()
+    return estimator_samples
     
     
