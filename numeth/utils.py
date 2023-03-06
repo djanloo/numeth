@@ -34,20 +34,13 @@ def bootstrap(data, function, n_resamples = 500):
 def generate(queue, n_samples, ising_params):
     """Single-processor execution of Ising simulation"""
     PID = mp.current_process().pid
+    set_seed(PID)
 
     # Sets the parameters for thermal burn in
     burn_in_params = ising_params.copy()
-    burn_in_params["N_iter"] = 1000 
-
-    # Set the parameters that prevent from parallel-chain flip
-    burn_in_biasing_params = ising_params.copy()
-    burn_in_biasing_params["h"] = 1.0
-    burn_in_params["N_iter"] = 1000 
+    burn_in_params["N_iter"] = 5000 
     
-    set_seed(PID)
-    
-    S = ising(**burn_in_biasing_params)     # bias burn-in
-    ising(**burn_in_params, startfrom=S)    # thermal burn-in
+    S = ising(**burn_in_params)     # THERMALIZATION
    
     for i in range(n_samples):
         ising(startfrom=S, **ising_params)
@@ -72,7 +65,7 @@ def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
         q = mp.Queue()
 
         # Starts the runners
-        n_processes = params.get("n_processes", 4)
+        n_processes = params.get("n_processes", mp.cpu_count())
         runners = [mp.Process(target=generate, args=(q, n_samples, ising_params)) for _ in range(n_processes)]
         for p in runners:
             p.start()
@@ -121,15 +114,15 @@ def schedule_from_chains(chains_df):
             scheduler = pd.concat([scheduler, row], ignore_index=True)
     return scheduler
 
-def means_and_errors(scheduler, chain_df, random_variables, estimators, estimators_names,
+def means_and_errors(scheduler, chain_df, estimators_dict,
                         bootstrap_args = None):
     """Takes a chainfile outputted by mp_scheduler() and estimates stuff.
     returns a dataframe (beta, L, estim1, err_estim1, ...)
 
-    estimators = list of functions to bootstrap
-    estimators names ---> guess what
+    estimators_dict = {"estimator_name":[variable, function]}
+
     """
-    errnames = ["err_"+en for en in estimators_names]
+    
 
     analysis = pd.DataFrame()
     for l in np.unique(scheduler.L.values):
@@ -139,12 +132,12 @@ def means_and_errors(scheduler, chain_df, random_variables, estimators, estimato
             concatenated_chains = chain_df.loc[(chain_df.L==l)&(chain_df.beta==b)].sort_values("PID")  
             row = dict(L=l, beta=b)
 
-            for rv in random_variables:
-                for estimator, est_name, est_errname in zip(estimators, estimators_names, errnames):                        
-                    row[est_name+ "_" +rv], row[est_errname + "_" +rv] = mbb(concatenated_chains[rv].values.astype('float32'), 
-                                                                            estimator, 
-                                                                            **bootstrap_args
-                                                                            )
+            for est_name in estimators_dict.keys():
+                rv , estimator = estimators_dict[est_name]
+                row[est_name], row["err" + est_name] = mbb(concatenated_chains[rv].values.astype('float32'), 
+                                                                        estimator, 
+                                                                        **bootstrap_args
+                                                                        )
             row = pd.DataFrame(row, index=[0])
             analysis = pd.concat([analysis, row], ignore_index=True)
     return analysis
