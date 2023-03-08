@@ -19,11 +19,11 @@ from tabulate import tabulate
 EURISTIC_FILE = "euristic_values.csv"
 SCHED_FILE = "schedule.csv"
 
-N_SAMPLES = 500
+N_SAMPLES = 10_000
 CHAIN_THIN = 100
-BOOTSTRAP_BINSIZE = 0.02
+BOOTSTRAP_BINSIZE = 0.05
 BOOTSTRAP_RESAMPLES = 10_000
-Ls = [100]
+Ls = [10, 15, 20, 25, 30, 40, 50, 60, 80, 100]
 
 PROPOSAL_N_ITER = 5
 N_STARTING_BETAS = 8

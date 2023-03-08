@@ -14,7 +14,7 @@ import seaborn as sns; sns.set()
 from numeth.utils import joinchains
 import emcee 
 
-a = pd.read_csv("5_7_10_13_15_200kpoints/euristic_values.csv").drop(columns=["Unnamed: 0"])
+a = pd.read_csv("euristic_values.csv").drop(columns=["Unnamed: 0"])
 
 def model(beta, betamax, chimax, A, w):
     return A*(beta-betamax)**2 + chimax
@@ -105,7 +105,7 @@ for l in np.unique(a.L):
         betamax, chimax, A, thr = samples.reshape(-1,ndim)[10*kkk]
         bb = subset.beta.loc[subset.chi > thr*subset.chi.max()]
         xx = np.linspace(min(bb), max(bb), 100)
-        axline.plot(xx, model(xx, betamax, chimax, A, thr), lw=1, color=colors[l], alpha=0.01)
+        axline.plot(xx, model(xx, betamax, chimax, A, thr), lw=1, color=colors[l], alpha=0.05)
     # model_samp = [model(xx, *theta) for theta in samples.reshape(-1,ndim)]
     # axline.plot(xx, l**2*model(xx, mean_betamax, mean_chimax, mean_A), color=colors[l])
     # axline.fill_between( xx, *np.quantile(model_samp, [ .02, .98], axis=0), color=colors[l], alpha=0.3)
