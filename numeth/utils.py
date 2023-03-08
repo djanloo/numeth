@@ -1,6 +1,8 @@
+import os 
+import multiprocessing as mp
+
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
 
 from datetime import datetime
 from time import perf_counter
@@ -161,3 +163,19 @@ def propose_by_edges(x, p, n_edges=2):
         if argmax < len(x) - (1 + i):
             new_xs.append( 0.5*(x[argmax + (i)] + x[argmax+(1+i)]) )
     return np.array(new_xs)
+
+def joinchains(dir):
+    joined_chains = pd.DataFrame()
+    this_iter = 0
+    while True:
+        try:
+            iter_chain = pd.read_csv(f"chain_iter_{this_iter}.csv").drop(columns="Unnamed: 0")
+            # print(iter_chain.columns)
+            iter_chain = iter_chain.rename(columns={"iter":"point_number"})
+            # print(iter_chain.columns)
+            iter_chain["iter"] = this_iter
+            joined_chains = pd.concat([joined_chains, iter_chain], ignore_index=True)
+            this_iter += 1
+        except FileNotFoundError:
+            break
+    return joined_chains
