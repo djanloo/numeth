@@ -14,8 +14,8 @@ import seaborn as sns; sns.set()
 from numeth.utils import joinchains
 import emcee 
 
-NPOINTS = 1000
-DISCARD = 500
+NPOINTS = 500
+DISCARD = 200
 
 a = pd.read_csv("euristic_values_120kpoints.csv").drop(columns=["Unnamed: 0"])
 
@@ -24,13 +24,13 @@ def model(beta, betamax, chimax, A, w):
 
 def model_inverse(chi, betamax, chimax, A,w):
     root = np.sqrt((chi - chimax)/A)
-    return ( betamax - root, betamax+ root)
+    return ( betamax - root, betamax + root)
 
 def log_prior(theta):
     betamax, chimax, A, thr = theta
 
     if 0<= betamax <= 0.5 and 0 <= chimax <= 500 and -100_000_000 <= A <= 0 and 0.5 < thr < 0.95:
-        return - np.log(-A)
+        return - np.log(-A) - thr
     else:
         return -np.inf
     
@@ -41,8 +41,8 @@ def log_likelihood(theta, beta, chi, yerr):
     good_betas = beta[inside_threlsholds_points]
     good_errors = yerr[inside_threlsholds_points]
     good_chis = chi[inside_threlsholds_points]
-    
-    return -0.5*np.mean(((good_chis - model(good_betas, *theta))/good_errors)**2)
+    # print(0.5*np.log(chimax*(1-thr)) - 0.5*np.log(-A) )
+    return -0.5*np.sum(((good_chis - model(good_betas, *theta))/good_errors)**2) + np.sum(inside_threlsholds_points)*(0.5*np.log(chimax*(1-thr)) + 0.5*np.log(-A)) - 0.5*np.sum(good_errors)
 
 def log_probability(theta, x, y, yerr):
     lp = log_prior(theta)
@@ -108,8 +108,13 @@ for l in np.unique(a.L):
     mean_w = np.mean(w_samples)
     print(f"estimates: \nbetamax = {mean_betamax}\nchimax = {mean_chimax}\nA = {mean_A}\nw = {mean_w}")
 
-    for kid in range(nwalkers):
-        ax_test_th.scatter(np.log10(-samples[:,kid,2].reshape(-1)),samples[:,kid,0].reshape(-1), color=colors[l], s=2)
+    ax_test_th.scatter(startpos[:, 0], startpos[:,2], color=colors[l], marker="+", s=50)
+    ax_test_th.scatter(betamax_samples, A_samples, color=colors[l], marker=".", s=2, alpha=0.5)
+
+    ## TEST for threshold
+    # for i in range(3):
+    #     npoints = np.sum(subset.chi.values > chimax_samples[5*i]*w_samples[5*i])
+    #     ax_test_th.scatter([l], [npoints])
 
     for kkk in range(149):
         betamax, chimax, A, thr = samples.reshape(-1,ndim)[10*kkk]
