@@ -10,7 +10,7 @@ from rich.progress import track
 from rich import print
 from tabulate import tabulate
 
-from .ising import set_seed, ising, energy
+from .ising import set_seed, ising, energy, mag_and_interact, rescale
 from.stats import moving_block_bootstrap as mbb
 
 def autocorr(y):
@@ -179,3 +179,54 @@ def joinchains(dir):
         except FileNotFoundError:
             break
     return joined_chains
+
+def _renormalize_worker(queue, n_points, ising_kwargs):
+    
+    n_renorm = int(np.log2(ising_kwargs["L"]) - 2)
+
+    PID = mp.current_process().pid
+    set_seed(PID)
+    burn_in = ising_kwargs.copy()
+    burn_in["N_iter"] = 3000
+    S = ising(**burn_in)
+
+    for i in range(n_points):
+        ising(**ising_kwargs, startfrom=S)
+        s = S.copy()
+        for j in range(n_renorm):
+            queue.put((len(s),) + mag_and_interact(s))
+            s = rescale(s)
+    queue.put(None)
+
+def renormalize_mp(n_points, ising_kwargs):
+
+    q = mp.Queue()
+
+    # Starts the runners
+    n_processes = mp.cpu_count()
+    runners = [mp.Process(target=_renormalize_worker, args=(q, n_points, ising_kwargs)) for _ in range(n_processes)]
+    for p in runners:
+        p.start()
+    
+
+    results = []
+    finished = 0
+
+    while True:
+        item = q.get()
+
+        # Listens to end of computations
+        if item is None:
+            finished += 1 
+        else:
+            results.append(item)
+            print(item)
+
+        if finished == n_processes:
+            break
+
+    for p in runners:
+        p.join()
+    
+    results_df = pd.DataFrame(results, columns=["L", "mag", "interact"])
+    return results_df
