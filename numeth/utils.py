@@ -10,7 +10,7 @@ from rich.progress import track
 from rich import print
 from tabulate import tabulate
 
-from .ising import set_seed, ising, energy, mag_and_interact, rescale
+from .ising import set_seed, ising, energy, mag_and_interact
 from.stats import moving_block_bootstrap as mbb
 
 def autocorr(y):
@@ -69,7 +69,7 @@ def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
         n_processes = params.get("n_processes", mp.cpu_count())
         if n_processes is None:
             n_processes = mp.cpu_count()
-            
+
         runners = [mp.Process(target=generate, args=(q, n_samples, ising_params)) for _ in range(n_processes)]
         for p in runners:
             p.start()
