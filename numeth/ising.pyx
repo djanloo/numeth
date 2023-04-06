@@ -60,7 +60,7 @@ cpdef void set_seed(seed):
 def ising(  unsigned int L=10, 
             float beta=0.1, 
             float J=1.0,  
-            float h=1.0, 
+            float h=0.0, 
             unsigned int N_iter=100,
             startfrom=None,
             init="random"):
@@ -107,3 +107,39 @@ cpdef energy(int [:,:] S, float J, float h):
             H=H+H_neigh
     return H/L**2
 
+cpdef mag_and_interact(int[:,:] S):
+    cdef float interact = 0
+    cdef float mag = 0
+    cdef float H_neigh
+    cdef int L = len(S)
+    cdef float Lsq = L**2
+    cdef int i,j
+
+    for i in range(L): 
+        for j in range(L):
+            neighborhood = (S[i, mod(j+1, L)] +S[mod(i+1, L), j] +S[i, mod(j-1, L)] +S[mod(i-1, L), j])
+            interact += 0.25*neighborhood*S[i,j]
+            mag += S[i,j]/Lsq
+    # print(f"returning {mag} {interact}")
+    return mag, interact
+
+cpdef rescale(int [:,:] S):
+    cdef int L = len(S)
+    cdef int [:, :] s = np.ones((L/2,L/2),dtype=np.dtype("i"))
+    cdef int i, j, k, m
+    cdef int n_up = 0
+    for i in range(L/2):
+        for j in range(L/2):
+            # block_sum = S[mod(2*i,L), mod(2*j,L)] + S[mod(2*i + 1,L), mod(2*j,L)] + S[mod(2*i,L), mod(2*j + 1,L)] + S[mod(2*i + 1,L), mod(2*j + 1,L)]
+            for k in [0, 1]:
+                for m in [0,1]:
+                    if S[mod(2*i + k,L), mod(2*j + m,L)] == 1:
+                        n_up += 1
+            if n_up > 2:
+                s[i, j] = 1
+            elif n_up < 2:
+                s[i,j] = -1
+            else:
+                s[i,j] =  2*(rand()%2) - 1
+            n_up = 0
+    return s

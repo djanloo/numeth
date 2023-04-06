@@ -28,7 +28,7 @@ Ls = [20]
 PROPOSAL_N_ITER = 5
 N_STARTING_BETAS = 8
 
-N_PROCESSES = 4
+N_PROCESSES = None
 
 euristic_df = pd.DataFrame()
 schedule_df = pd.DataFrame()

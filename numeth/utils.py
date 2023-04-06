@@ -50,7 +50,6 @@ def generate(queue, n_samples, ising_params):
     queue.put(None)
 
 
-
 def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
     """Runs multiprocess Ising with params indicated by schedule"""
     results_df = pd.DataFrame(columns=["PID", "iter", "beta", "L", "m", "E"])
@@ -68,6 +67,9 @@ def mp_scheduler(schedule, savefile="allere_gng.csv", **params):
 
         # Starts the runners
         n_processes = params.get("n_processes", mp.cpu_count())
+        if n_processes is None:
+            n_processes = mp.cpu_count()
+            
         runners = [mp.Process(target=generate, args=(q, n_samples, ising_params)) for _ in range(n_processes)]
         for p in runners:
             p.start()
