@@ -2,19 +2,19 @@
 
 generate:
 	@make clear
-	@python -m numeth.setup
+	@python3 -m numeth.setup
 
 profile:
 	@make clear
-	@python -m numeth.setup --profile
+	@python3 -m numeth.setup --profile
 
 hardcore:
 	make clear
-	@python -m numeth.setup --hardcore
+	@python3 -m numeth.setup --hardcore
 
 hardcoreprofile:
 	make clear
-	@python -m numeth.setup --hardcore --profile
+	@python3 -m numeth.setup --hardcore --profile
 
 clear:
 	@echo "Cleaning all.."
