@@ -123,23 +123,23 @@ cpdef mag_and_interact(int[:,:] S):
     # print(f"returning {mag} {interact}")
     return mag, interact
 
-cpdef rescale(int [:,:] S):
-    cdef int L = len(S)
-    cdef int [:, :] s = np.ones((L/2,L/2),dtype=np.dtype("i"))
-    cdef int i, j, k, m
-    cdef int n_up = 0
-    for i in range(L/2):
-        for j in range(L/2):
-            # block_sum = S[mod(2*i,L), mod(2*j,L)] + S[mod(2*i + 1,L), mod(2*j,L)] + S[mod(2*i,L), mod(2*j + 1,L)] + S[mod(2*i + 1,L), mod(2*j + 1,L)]
-            for k in [0, 1]:
-                for m in [0,1]:
-                    if S[mod(2*i + k,L), mod(2*j + m,L)] == 1:
-                        n_up += 1
-            if n_up > 2:
-                s[i, j] = 1
-            elif n_up < 2:
-                s[i,j] = -1
-            else:
-                s[i,j] =  2*(rand()%2) - 1
-            n_up = 0
-    return s
+# cpdef rescale(int [:,:] S):
+#     cdef int L = len(S)
+#     cdef int [:, :] s = np.ones((L/2,L/2),dtype=np.dtype("i"))
+#     cdef int i, j, k, m
+#     cdef int n_up = 0
+#     for i in range(L/2):
+#         for j in range(L/2):
+#             # block_sum = S[mod(2*i,L), mod(2*j,L)] + S[mod(2*i + 1,L), mod(2*j,L)] + S[mod(2*i,L), mod(2*j + 1,L)] + S[mod(2*i + 1,L), mod(2*j + 1,L)]
+#             for k in [0, 1]:
+#                 for m in [0,1]:
+#                     if S[mod(2*i + k,L), mod(2*j + m,L)] == 1:
+#                         n_up += 1
+#             if n_up > 2:
+#                 s[i, j] = 1
+#             elif n_up < 2:
+#                 s[i,j] = -1
+#             else:
+#                 s[i,j] =  2*(rand()%2) - 1
+#             n_up = 0
+#     return s
